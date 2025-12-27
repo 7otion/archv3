@@ -12,7 +12,6 @@ export class ContentType extends Model<ContentType> {
 	id!: number;
 	name!: string;
 	slug!: string;
-	shape!: 'square' | 'rectangular';
 	file_type!: 'video' | 'image' | 'binary' | 'document' | 'other';
 	description!: string | null;
 	icon!: string | null;

@@ -113,7 +113,6 @@ pub fn get_migrations() -> Vec<Migration> {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL CHECK(length(name) <= 255) UNIQUE,
                 slug TEXT NOT NULL CHECK(length(slug) <= 255) UNIQUE,
-				shape TEXT NOT NULL DEFAULT 'rectangular' CHECK(shape IN ('square', 'rectangular')),
 				file_type TEXT NOT NULL DEFAULT 'rectangular' CHECK(file_type IN ('video', 'image', 'binary', 'document', 'other')),
                 description TEXT,
                 cover TEXT,

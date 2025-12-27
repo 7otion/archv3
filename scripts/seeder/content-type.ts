@@ -5,7 +5,6 @@ export function contentTypeSeeder(db: Database) {
 	const contentTypes = [
 		{
 			name: 'Movies',
-			shape: 'rectangular',
 			file_type: 'video',
 			description: 'All your movies and films',
 			cover: null,
@@ -17,7 +16,6 @@ export function contentTypeSeeder(db: Database) {
 		},
 		{
 			name: 'Games',
-			shape: 'square',
 			file_type: 'other',
 			description: 'PC, console, and mobile games',
 			cover: null,
@@ -29,7 +27,6 @@ export function contentTypeSeeder(db: Database) {
 		},
 		{
 			name: 'Work Files',
-			shape: 'rectangular',
 			file_type: 'document',
 			description: 'Documents and work-related files',
 			cover: null,
@@ -41,7 +38,6 @@ export function contentTypeSeeder(db: Database) {
 		},
 		{
 			name: 'Family Photos',
-			shape: 'square',
 			file_type: 'image',
 			description: 'Personal and family images',
 			cover: null,
@@ -65,7 +61,6 @@ export function contentTypeSeeder(db: Database) {
 		insert.run({
 			$name: props.name,
 			$slug: props.name.toLowerCase().replace(/\s+/g, '-'),
-			$shape: props.shape,
 			$file_type: props.file_type,
 			$description: props.description,
 			$cover: props.cover,
