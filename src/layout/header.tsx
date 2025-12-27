@@ -2,6 +2,7 @@ import { Link } from 'wouter';
 
 import { Separator } from '@/components/separator';
 
+import { AppActions } from './app-actions';
 import { GeneralSearch } from './general-search';
 import { WindowActions } from './window-actions';
 
@@ -16,6 +17,9 @@ export const Header = () => {
 					<img src="/vite.svg" className="h-5 me-0.5" />
 					ARCHV3
 				</Link>
+				<div className="shrink-0">
+					<AppActions />
+				</div>
 			</div>
 
 			<div className="flex items-center gap-2 shrink-0">

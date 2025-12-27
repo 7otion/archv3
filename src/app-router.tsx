@@ -10,7 +10,7 @@ export function AppRouter() {
 		<Layout>
 			<Switch>
 				<Route path="/" component={Placeholder} />
-				<Route component={() => <div>404 - Not Found</div>} />
+				<Route path="/video-downloader" component={Placeholder} />
 			</Switch>
 		</Layout>
 	);
