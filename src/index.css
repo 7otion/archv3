@@ -1,6 +1,14 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+@font-face {
+	font-family: 'Inconsolata';
+	src: url('/fonts/inconsolata/inconsolata.woff2') format('woff2');
+	font-weight: 100 900;
+	font-style: normal;
+	font-display: swap;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -45,6 +53,7 @@
 }
 
 :root {
+	--default-font-family: 'Inconsolata', sans-serif;
 	--radius: 0.625rem;
 	--background: oklch(1 0 0);
 	--foreground: oklch(0.145 0 0);
