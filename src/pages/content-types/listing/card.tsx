@@ -87,11 +87,11 @@ const ContentTypeCard = ({ contentType, itemCount }: ContentTypeCardProps) => {
 
 	const cardStyle: React.CSSProperties = {
 		backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)`,
-		backgroundSize: contentType.cover ? 'cover' : '40px 40px',
+		backgroundSize: contentType.coverSrc ? 'cover' : '40px 40px',
 	};
 
 	const bgImage = {
-		backgroundImage: `url(${contentType.cover})`,
+		backgroundImage: `url(${contentType.coverSrc})`,
 	};
 
 	return (
@@ -101,7 +101,7 @@ const ContentTypeCard = ({ contentType, itemCount }: ContentTypeCardProps) => {
 					onClick={handleCardClick}
 					className={cn(
 						'overflow-hidden relative card hover:shadow-lg dark:hover:shadow-blue-800/10 dark:hover:border-blue-700/20 hover:cursor-pointer rounded-md w-full h-full flex flex-col justify-between p-4 bg-cover z-2 bg-center group hover:-translate-y-0.5 ransition-all duration-200 ease-out',
-						contentType.cover
+						contentType.coverSrc
 							? ''
 							: 'rounded-lg! border bg-linear-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800',
 						isContextMenuOpen &&
@@ -109,7 +109,7 @@ const ContentTypeCard = ({ contentType, itemCount }: ContentTypeCardProps) => {
 					)}
 					style={cardStyle}
 				>
-					{contentType.cover && (
+					{contentType.coverSrc && (
 						<div
 							className="absolute inset-0 bg-cover bg-center rounded-lg"
 							style={bgImage}
