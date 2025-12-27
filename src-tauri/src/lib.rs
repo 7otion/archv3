@@ -3,6 +3,8 @@ use std::fs;
 use tauri::Manager;
 use tauri::path::BaseDirectory;
 
+mod files;
+mod utils;
 mod migrations;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -40,6 +42,17 @@ pub fn run() {
 
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![
+            files::highlight_path::highlight_path,
+            files::get_available_disks::get_available_disks,
+            files::get_folders::get_folders,
+            files::get_parent_path::get_parent_path,
+            files::get_path_segments::get_path_segments,
+            files::copy_file::copy_file,
+            files::fetch_files::fetch_files,
+            files::file_details::file_details,
+            files::trash::trash,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
