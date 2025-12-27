@@ -1,3 +1,8 @@
+use std::fs;
+
+use tauri::Manager;
+use tauri::path::BaseDirectory;
+
 mod migrations;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -21,6 +26,18 @@ pub fn run() {
                         .build(),
                 )?;
             }
+
+            let app_cache_dir = app
+                .handle()
+                .path()
+                .resolve("cache", BaseDirectory::AppConfig)
+                .map_err(|e| format!("Failed to resolve App Config directory: {}", e))?;
+
+            if !app_cache_dir.exists() {
+                fs::create_dir_all(&app_cache_dir)
+                    .map_err(|e| format!("Failed to create cache directory: {}", e))?;
+            }
+
             Ok(())
         })
         .run(tauri::generate_context!())
