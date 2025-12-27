@@ -1,4 +1,4 @@
-import { Model, getRepository, ORM } from '7otion-orm';
+import { Model, getRepository, ORM } from '@7otion/orm';
 import { convertFileSrc } from '@tauri-apps/api/core';
 
 import { Category } from '@/lib/models/category';

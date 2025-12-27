@@ -1,4 +1,4 @@
-import { Model } from '7otion-orm';
+import { Model } from '@7otion/orm';
 import { convertFileSrc } from '@tauri-apps/api/core';
 
 import { ContentType } from '@/lib/models/content-type';

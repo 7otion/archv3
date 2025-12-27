@@ -1,4 +1,4 @@
-import { Model } from '7otion-orm';
+import { Model } from '@7otion/orm';
 
 export type AttributeType = 'text' | 'number' | 'date' | 'boolean' | 'json';
 

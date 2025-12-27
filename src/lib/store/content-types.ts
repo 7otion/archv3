@@ -1,4 +1,4 @@
-import { getRepository } from '7otion-orm';
+import { getRepository } from '@7otion/orm';
 
 import { ContentType } from '@/lib/models/content-type';
 import { Content } from '@/lib/models/content';

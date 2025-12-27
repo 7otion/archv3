@@ -1,4 +1,4 @@
-import { Model } from '7otion-orm';
+import { Model } from '@7otion/orm';
 
 import { Video } from '@/lib/models/video';
 import { Image } from '@/lib/models/image';

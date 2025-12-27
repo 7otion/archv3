@@ -1,4 +1,4 @@
-import { Model, getRepository } from '7otion-orm';
+import { Model, getRepository } from '@7otion/orm';
 
 export class Settings extends Model<Settings> {
 	static config = {

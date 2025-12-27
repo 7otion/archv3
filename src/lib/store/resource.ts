@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Model, ModelConstructor, QueryValue } from '7otion-orm';
+import type { Model, ModelConstructor, QueryValue } from '@7otion/orm';
 
 export interface ResourceState<T extends Model<any>> {
 	items: T[];

@@ -1,4 +1,4 @@
-import { Model } from '7otion-orm';
+import { Model } from '@7otion/orm';
 
 import type { MediaQuality } from '@/lib/models/file';
 
