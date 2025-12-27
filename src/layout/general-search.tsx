@@ -167,7 +167,7 @@ export function GeneralSearch({ ...props }: DialogProps) {
 			<Button
 				variant="ghost"
 				size="icon"
-				className="clickable-content size-7 px-0 rounded-none"
+				className="clickable-content size-9 px-0 rounded-none"
 				onClick={() => setOpen(true)}
 				{...props}
 			>
