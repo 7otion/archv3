@@ -1,0 +1,20 @@
+import { create } from 'zustand';
+
+type DialogType =
+	// content type dialogs
+	| 'content-type-delete'
+	| 'content-type-lock-toggle'
+	| 'content-type-upsert'
+	| null;
+
+interface DialogState {
+	activeDialog: DialogType;
+	openDialog: (type: DialogType) => void;
+	closeDialog: () => void;
+}
+
+export const useDialogStore = create<DialogState>(set => ({
+	activeDialog: null,
+	openDialog: type => set({ activeDialog: type }),
+	closeDialog: () => set({ activeDialog: null }),
+}));
