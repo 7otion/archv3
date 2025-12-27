@@ -29,7 +29,7 @@ export default defineConfig({
 					protocol: 'ws',
 					host,
 					port: 5138,
-				}
+			  }
 			: undefined,
 		watch: {
 			ignored: ['**/src-tauri/**'],

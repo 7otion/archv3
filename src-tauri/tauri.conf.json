@@ -1,61 +1,65 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "ARCHV3",
-  "version": "0.0.0",
-  "identifier": "com.archv3",
-  "build": {
-    "frontendDist": "../dist",
-    "devUrl": "http://localhost:5137",
-    "beforeDevCommand": "bun run dev",
-    "beforeBuildCommand": "bun run build"
-  },
-  "app": {
-    "windows": [
-      {
-        "title": "ARCHV3",
-        "width": 820,
-        "height": 600,
-        "minWidth": 820,
-        "minHeight": 600,
-        "resizable": true,
-        "dragDropEnabled": true,
-        "useHttpsScheme": true,
-        "decorations": false,
-        "shadow": false,
-        "transparent": true
-      }
-    ],
-    "security": {
-      "csp": "default-src 'self' ipc: https://ipc.localhost asset: asset.localhost; img-src 'self' https: asset: asset.localhost data:; media-src 'self' https:; style-src 'self' 'unsafe-inline';",
-      "assetProtocol": {
-        "enable": true,
-        "scope": ["**"]
-      },
-      "capabilities": [
-        {
-          "identifier": "main",
-          "description": "Main application capabilities",
-          "windows": ["main"],
-          "permissions": [
-            "core:default",
-            "core:window:allow-toggle-maximize",
-            "core:window:allow-minimize",
-            "core:window:allow-close",
-            "core:event:default"
-          ]
-        }
-      ]
-    }
-  },
-  "bundle": {
-    "active": true,
-    "targets": "msi",
-    "icon": [
-      "icons/32x32.png",
-      "icons/128x128.png",
-      "icons/128x128@2x.png",
-      "icons/icon.icns",
-      "icons/icon.ico"
-    ]
-  }
+	"$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+	"productName": "ARCHV3",
+	"version": "0.0.0",
+	"identifier": "com.archv3",
+	"build": {
+		"frontendDist": "../dist",
+		"devUrl": "http://localhost:5137",
+		"beforeDevCommand": "bun run dev",
+		"beforeBuildCommand": "bun run build"
+	},
+	"app": {
+		"windows": [
+			{
+				"title": "ARCHV3",
+				"width": 820,
+				"height": 600,
+				"minWidth": 820,
+				"minHeight": 600,
+				"resizable": true,
+				"dragDropEnabled": true,
+				"useHttpsScheme": true,
+				"decorations": false,
+				"shadow": false,
+				"transparent": true
+			}
+		],
+		"security": {
+			"csp": "default-src 'self' ipc: https://ipc.localhost asset: asset.localhost; img-src 'self' https: asset: asset.localhost data:; media-src 'self' https:; style-src 'self' 'unsafe-inline';",
+			"assetProtocol": {
+				"enable": true,
+				"scope": [
+					"**"
+				]
+			},
+			"capabilities": [
+				{
+					"identifier": "main",
+					"description": "Main application capabilities",
+					"windows": [
+						"main"
+					],
+					"permissions": [
+						"core:default",
+						"core:window:allow-toggle-maximize",
+						"core:window:allow-minimize",
+						"core:window:allow-close",
+						"core:event:default"
+					]
+				}
+			]
+		}
+	},
+	"bundle": {
+		"active": true,
+		"targets": "msi",
+		"icon": [
+			"icons/32x32.png",
+			"icons/128x128.png",
+			"icons/128x128@2x.png",
+			"icons/icon.icns",
+			"icons/icon.ico"
+		]
+	}
 }
