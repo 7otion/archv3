@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
-import { Package, Loader2 } from 'lucide-react';
+import { PackageIcon, Loader2Icon } from 'lucide-react';
 
 import { Button } from '@/components/button';
 import { Checkbox } from '@/components/checkbox';
@@ -101,7 +101,7 @@ const ImportDataset = () => {
 				<div className="flex items-center justify-between">
 					<div>
 						<DialogTitle className="flex items-center gap-2">
-							<Package className="h-5 w-5" />
+							<PackageIcon className="h-5 w-5" />
 							Import Datasets
 						</DialogTitle>
 						<DialogDescription>
@@ -115,7 +115,7 @@ const ImportDataset = () => {
 			<div className="mt-1 max-h-[60vh] px-1 sm:max-w-175 lg:max-w-197.5 overflow-y-auto">
 				{loading ? (
 					<div className="flex items-center justify-center py-8">
-						<Loader2 className="h-6 w-6 animate-spin mr-2" />
+						<Loader2Icon className="h-6 w-6 animate-spin mr-2" />
 						<span>Loading datasets...</span>
 					</div>
 				) : (
@@ -134,7 +134,7 @@ const ImportDataset = () => {
 
 							{datasets.length === 0 && (
 								<div className="col-span-full text-center py-8 text-muted-foreground">
-									<Package className="h-12 w-12 mx-auto mb-3 opacity-50" />
+									<PackageIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
 									<p>No datasets available</p>
 									<p className="text-sm">
 										Check back later for new dataset
