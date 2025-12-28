@@ -44,49 +44,41 @@ export class DatasetImporter {
 			demoDataCount: 0,
 		};
 
-		try {
-			return await ORM.getInstance().transaction(async () => {
-				if (await this.datasetExists(dataset)) {
-					throw new DuplicateContentTypeError(
-						dataset.json.content_type.name,
-					);
-				}
-
-				result.contentType = await this.importContentType(dataset);
-				result.categoriesCount = await this.importCategories(
-					result.contentType.id,
-					dataset.json.categories,
+		return await ORM.getInstance().transaction(async () => {
+			if (await this.datasetExists(dataset)) {
+				throw new DuplicateContentTypeError(
+					dataset.json.content_type.name,
 				);
+			}
 
-				const tagMap = await this.importTags(
+			result.contentType = await this.importContentType(dataset);
+			result.categoriesCount = await this.importCategories(
+				result.contentType.id,
+				dataset.json.categories,
+			);
+
+			const tagMap = await this.importTags(
+				result.contentType.id,
+				dataset.json.tags,
+			);
+			result.tagsCount = Object.keys(tagMap).length;
+
+			result.attributesCount = await this.importMetadataAttributes(
+				result.contentType.id,
+				dataset.json.content_metadata_attributes,
+			);
+
+			if (options.includeDemoData && dataset.json.demo_data?.length > 0) {
+				result.demoDataCount = await this.importDemoData(
 					result.contentType.id,
-					dataset.json.tags,
+					dataset.json.demo_data,
+					tagMap,
 				);
-				result.tagsCount = Object.keys(tagMap).length;
+			}
 
-				result.attributesCount = await this.importMetadataAttributes(
-					result.contentType.id,
-					dataset.json.content_metadata_attributes,
-				);
-
-				if (
-					options.includeDemoData &&
-					dataset.json.demo_data?.length > 0
-				) {
-					result.demoDataCount = await this.importDemoData(
-						result.contentType.id,
-						dataset.json.demo_data,
-						tagMap,
-					);
-				}
-
-				result.success = true;
-				return result;
-			});
-		} catch (error) {
-			result.error = this.formatError(error);
-			throw error;
-		}
+			result.success = true;
+			return result;
+		});
 	}
 
 	async importMultipleDatasets(
@@ -100,24 +92,15 @@ export class DatasetImporter {
 		};
 
 		for (const dataset of datasets) {
-			try {
-				if (await this.datasetExists(dataset)) {
-					console.warn(
-						`Skipping "${dataset.json.content_type.name}" - already exists`,
-					);
-					continue;
-				}
-
-				await this.importDataset(dataset, options);
-				result.successful++;
-			} catch (error) {
-				result.failed++;
-				const errorMsg = `Failed to import "${
-					dataset.title
-				}": ${this.formatError(error)}`;
-				result.errors.push(errorMsg);
-				console.error(errorMsg);
+			if (await this.datasetExists(dataset)) {
+				console.warn(
+					`Skipping "${dataset.json.content_type.name}" - already exists`,
+				);
+				continue;
 			}
+
+			await this.importDataset(dataset, options);
+			result.successful++;
 		}
 
 		return result;
@@ -297,14 +280,7 @@ export class DatasetImporter {
 				continue;
 			}
 
-			try {
-				await this.contentRepo.associateTag(content, tag);
-			} catch (error) {
-				console.error(
-					`Failed to associate tag "${tagSlug}" with "${content.name}":`,
-					error,
-				);
-			}
+			await this.contentRepo.associateTag(content, tag);
 		}
 	}
 
@@ -344,13 +320,5 @@ export class DatasetImporter {
 				value: JSON.stringify(value),
 			});
 		}
-	}
-
-	// ========================================================================
-	// Helper Methods
-	// ========================================================================
-
-	private formatError(error: unknown): string {
-		return error instanceof Error ? error.message : String(error);
 	}
 }
