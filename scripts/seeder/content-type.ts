@@ -51,9 +51,9 @@ export function contentTypeSeeder(db: Database) {
 
 	const insert = db.query(`
 		INSERT INTO content_types
-			(name, slug, shape, file_type, description, cover, icon, "order", pinned, docked, locked)
+			(name, slug, file_type, description, cover, icon, "order", pinned, docked, locked)
 		VALUES
-			($name, $slug, $shape, $file_type, $description, $cover, $icon, $order, $pinned, $docked, $locked)
+			($name, $slug, $file_type, $description, $cover, $icon, $order, $pinned, $docked, $locked)
 	`);
 
 	let lastLogLength = 0;
