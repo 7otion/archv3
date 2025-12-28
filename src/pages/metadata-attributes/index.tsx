@@ -15,7 +15,6 @@ import {
 	SortableContext,
 	verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { useRoute } from 'wouter';
 
 import { Button } from '@/components/button';
 import { Input } from '@/components/input';
@@ -33,7 +32,7 @@ import { LayoutBreadcrumb } from '@/layout/breadcrumb';
 
 import type { MetadataAttribute } from '@/lib/models/metadata-attribute';
 import { useMetadataAttributesStore } from '@/lib/store/metadata-attributes';
-import { useContentTypesStore } from '@/lib/store/content-types';
+import { useCurrentContentType } from '@/lib/hooks/use-current-content-type';
 import { toastError } from '@/lib/utils';
 
 import { MetadataAttributeRow } from './row';
@@ -64,11 +63,7 @@ const MetadataAttributesPage = () => {
 
 	const sensors = useSensors(useSensor(PointerSensor));
 
-	const contentTypes = useContentTypesStore(state => state.items);
-	const [, params] = useRoute('/content-types/:contentType/manage');
-	const currentContentType = params?.contentType
-		? contentTypes.find(ct => ct.slug === params.contentType)
-		: undefined;
+	const currentContentType = useCurrentContentType();
 
 	const [
 		metadataAttributes,

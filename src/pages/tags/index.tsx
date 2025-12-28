@@ -2,7 +2,6 @@ import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { PlusIcon, SearchIcon } from 'lucide-react';
 import { z } from 'zod';
-import { useRoute } from 'wouter';
 
 import { Button } from '@/components/button';
 import { Input } from '@/components/input';
@@ -19,7 +18,7 @@ import {
 import { LayoutBreadcrumb } from '@/layout/breadcrumb';
 
 import { useTagsStore } from '@/lib/store/tags';
-import { useContentTypesStore } from '@/lib/store/content-types';
+import { useCurrentContentType } from '@/lib/hooks/use-current-content-type';
 import { Tag } from '@/lib/models/tag';
 import { toastError } from '@/lib/utils';
 
@@ -48,11 +47,7 @@ const TagsPage = () => {
 		Map<number | 'new', EditableTag>
 	>(new Map());
 
-	const contentTypes = useContentTypesStore(state => state.items);
-	const [, params] = useRoute('/content-types/:contentType/manage');
-	const currentContentType = params?.contentType
-		? contentTypes.find(ct => ct.slug === params.contentType)
-		: undefined;
+	const currentContentType = useCurrentContentType();
 
 	const [tags, fetchTags, addTag, updateTag] = useTagsStore(
 		useShallow(state => [

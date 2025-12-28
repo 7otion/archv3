@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { PlusIcon, SearchIcon } from 'lucide-react';
-import { useRoute } from 'wouter';
 
 import { Button } from '@/components/button';
 import { Toggle } from '@/components/toggle';
@@ -11,19 +10,15 @@ import { Loading } from '@/components/loading';
 import { CategoryCard } from '@/pages/categories/card';
 
 import { useCategoriesStore } from '@/lib/store/categories';
-import { useContentTypesStore } from '@/lib/store/content-types';
 import { useDialogStore } from '@/lib/store/dialog';
+import { useCurrentContentType } from '@/lib/hooks/use-current-content-type';
 
 const CategoriesPage = () => {
 	const [isLoading, setIsLoading] = useState(false);
 	const [filterToggle, setFilterToggle] = useState(false);
 	const [filterQuery, setFilterQuery] = useState('');
 
-	const contentTypes = useContentTypesStore(state => state.items);
-	const [, params] = useRoute('/content-types/:contentType/manage');
-	const currentContentType = params?.contentType
-		? contentTypes.find(ct => ct.slug === params.contentType)
-		: undefined;
+	const currentContentType = useCurrentContentType();
 
 	const openDialog = useDialogStore(state => state.openDialog);
 	const [categories, setSelectedCategory, fetchCategories] =
