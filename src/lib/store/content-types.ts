@@ -5,18 +5,10 @@ import { Content } from '@/lib/models/content';
 
 import { createResourceStore, type ResourceState } from './resource';
 
-export function withContentTypeFilter(): Record<string, any> {
-	const selectedContentType = useContentTypesStore.getState().selectedItem;
-	return selectedContentType
-		? { content_type_id: selectedContentType.id }
-		: {};
-}
-
 interface ContentTypesState extends ResourceState<ContentType> {
 	contentTypeCounts: Record<number, number>;
 	isDraggable: boolean;
 
-	getBySlug: (slug: string) => Promise<ContentType | null>;
 	fetchContentTypeCounts: () => Promise<Record<number, number>>;
 	updateOrder: (contentTypes: ContentType[]) => Promise<void>;
 	setDraggable: (draggable: boolean) => void;
@@ -32,11 +24,6 @@ export const useContentTypesStore = createResourceStore<
 	(set, get) => ({
 		contentTypeCounts: {},
 		isDraggable: false,
-
-		async getBySlug(slug: string) {
-			const contentTypeRepo = getRepository(ContentType);
-			return contentTypeRepo.query().where('slug', slug).first();
-		},
 
 		async fetch() {
 			const { items } = get();
