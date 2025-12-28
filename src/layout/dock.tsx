@@ -5,7 +5,7 @@ import { FloatingDock } from '@/components/floating-dock';
 import { useContentTypesStore } from '@/lib/store/content-types';
 
 export function Dock() {
-	const contentTypes = useContentTypesStore( state => state.items);
+	const contentTypes = useContentTypesStore(state => state.items);
 	const dockedContentTypes = contentTypes.filter(ct => ct.docked === 1);
 
 	const links = useMemo(() => {
