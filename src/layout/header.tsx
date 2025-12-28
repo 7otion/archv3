@@ -5,6 +5,7 @@ import { Separator } from '@/components/separator';
 import { AppActions } from './app-actions';
 import { GeneralSearch } from './general-search';
 import { WindowActions } from './window-actions';
+import { Settings } from './settings';
 
 export const Header = () => {
 	return (
@@ -24,6 +25,7 @@ export const Header = () => {
 
 			<div className="flex items-center gap-2 shrink-0">
 				<GeneralSearch />
+				<Settings />
 				<Separator orientation="vertical" className="h-7!" />
 				<WindowActions />
 			</div>
