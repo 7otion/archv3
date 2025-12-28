@@ -5,6 +5,19 @@ import { Content } from '@/lib/models/content';
 
 import { createResourceStore, type ResourceState } from './resource';
 
+export const extractContentTypeFromPath = (): ContentType | undefined => {
+	const pathName = window.location.pathname;
+	if (pathName.startsWith('/content-types/')) {
+		const params = pathName.split('/');
+		const contentTypeSlug = params[2];
+		const contentTypes = useContentTypesStore.getState().items;
+		const currentContentType = contentTypeSlug
+			? contentTypes.find(ct => ct.slug === contentTypeSlug)
+			: undefined;
+		return currentContentType;
+	}
+};
+
 interface ContentTypesState extends ResourceState<ContentType> {
 	contentTypeCounts: Record<number, number>;
 	isDraggable: boolean;

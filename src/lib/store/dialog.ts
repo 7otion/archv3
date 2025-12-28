@@ -7,6 +7,9 @@ type DialogType =
 	| 'content-type-delete'
 	| 'content-type-lock-toggle'
 	| 'content-type-upsert'
+	// category dialogs
+	| 'category-delete'
+	| 'category-upsert'
 	| null;
 
 interface DialogState {
