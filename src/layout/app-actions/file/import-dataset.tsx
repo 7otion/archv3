@@ -177,9 +177,13 @@ const ImportDataset = () => {
 									}
 									className="min-w-35"
 								>
-									{importLoading
-										? (<><Spinner /> Importing...</>) 
-										: 'Start Importing'}
+									{importLoading ? (
+										<>
+											<Spinner /> Importing...
+										</>
+									) : (
+										'Start Importing'
+									)}
 								</Button>
 							</div>
 						</div>
