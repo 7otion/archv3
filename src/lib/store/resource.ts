@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { Model, type ModelConstructor, type QueryValue } from '@7otion/orm';
+import { loadFromStorage, saveToStorage } from '@/lib/utils';
 
 export interface ResourceState<T extends Model<any>> {
 	items: T[];
@@ -52,36 +53,6 @@ function getStorageKey(modelName: string): string {
 	return `${slugifiedModel}_${slugifiedPath}_table`;
 }
 
-function loadPaginationState(modelName: string): PaginationPersistState | null {
-	if (typeof window === 'undefined') return null;
-
-	try {
-		const key = getStorageKey(modelName);
-		const stored = localStorage.getItem(key);
-		if (!stored) return null;
-
-		return JSON.parse(stored);
-	} catch (error) {
-		console.warn('Failed to load pagination state:', error);
-		return null;
-	}
-}
-
-function savePaginationState(
-	modelName: string,
-	state: PaginationPersistState,
-): void {
-	if (typeof window === 'undefined') return;
-	const key = getStorageKey(modelName);
-	localStorage.setItem(key, JSON.stringify(state));
-}
-
-function clearPaginationState(modelName: string): void {
-	if (typeof window === 'undefined') return;
-	const key = getStorageKey(modelName);
-	localStorage.removeItem(key);
-}
-
 export function createResourceStore<
 	T extends Model<any>,
 	TExtended extends ResourceState<T>,
@@ -96,7 +67,10 @@ export function createResourceStore<
 	const primaryKeyName = model.config.primaryKey || 'id';
 	const modelName = model.name;
 
-	const persistedState = loadPaginationState(modelName);
+	const persistedState = loadFromStorage<PaginationPersistState | null>(
+		getStorageKey(modelName),
+		null,
+	);
 	const defaultPageSize = 20;
 	const defaultCurrentPage = 1;
 
@@ -198,7 +172,12 @@ export function createResourceStore<
 						// If the current page has no data but there are total items,
 						// it means the page is out of range
 						// Fetch the last available page.
-						clearPaginationState(modelName);
+						saveToStorage(getStorageKey(modelName), {
+							currentPage: page,
+							totalPages: Math.ceil(total / limit),
+							totalItems: total,
+							pageSize: limit,
+						});
 						const lastPage = Math.ceil(total / limit);
 						const result = await query.paginate(lastPage, limit);
 						data = result.data;
@@ -206,7 +185,7 @@ export function createResourceStore<
 						page = lastPage;
 					}
 
-					savePaginationState(modelName, {
+					saveToStorage(getStorageKey(modelName), {
 						currentPage: page,
 						totalPages: Math.ceil(total / limit),
 						totalItems: total,
