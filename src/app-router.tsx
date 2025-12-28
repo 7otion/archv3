@@ -7,6 +7,8 @@ const ContentTypeListPage = lazy(() => import('@/pages/content-types/listing'));
 const ManageContentTypePage = lazy(
 	() => import('@/pages/content-types/manage'),
 );
+const ContentListPage = lazy(() => import('@/pages/contents/listing'));
+
 const Placeholder = lazy(() => import('@/pages/placeholder'));
 
 export function AppRouter() {
@@ -17,6 +19,10 @@ export function AppRouter() {
 				<Route
 					path="/content-types/:contentType/manage/:section?"
 					component={ManageContentTypePage}
+				/>
+				<Route
+					path="/content-types/:contentType"
+					component={ContentListPage}
 				/>
 				<Route path="/video-downloader" component={Placeholder} />
 			</Switch>
