@@ -1,19 +1,11 @@
-import { useEffect, useMemo } from 'react';
-import { useShallow } from 'zustand/react/shallow';
+import { useMemo } from 'react';
 import { DownloadIcon, HomeIcon } from 'lucide-react';
 
 import { FloatingDock } from '@/components/floating-dock';
 import { useContentTypesStore } from '@/lib/store/content-types';
 
 export function Dock() {
-	const [contentTypes, fetch] = useContentTypesStore(
-		useShallow(state => [state.items, state.fetch]),
-	);
-
-	useEffect(() => {
-		fetch();
-	}, [fetch]);
-
+	const contentTypes = useContentTypesStore( state => state.items);
 	const dockedContentTypes = contentTypes.filter(ct => ct.docked === 1);
 
 	const links = useMemo(() => {
