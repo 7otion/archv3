@@ -32,6 +32,9 @@ tauri-plugin-clipboard-manager = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 trash = "5.2.5"
+uuid = { version = "1.19.0", features = ["v4"] }
+reqwest = { version = "0.12.28", features = ["json"] }
+tokio = "1.48.0"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-global-shortcut = "2"

@@ -7,6 +7,7 @@ import { Loading } from '@/components/loading';
 import { Toaster } from '@/components/sonner';
 
 import { AppRouter } from './app-router';
+import { DialogCoordinator } from './dialog-coordinator';
 
 function App() {
 	const [dbInitialized, setDbInitialized] = useState(false);
@@ -46,6 +47,7 @@ function App() {
 					},
 				}}
 			/>
+			<DialogCoordinator />
 			<Suspense fallback={<Loading />}>
 				<Router>
 					<AppRouter />

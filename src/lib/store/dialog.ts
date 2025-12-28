@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 
 type DialogType =
+	// Tool dialogs
+	| 'import-dataset'
 	// content type dialogs
 	| 'content-type-delete'
 	| 'content-type-lock-toggle'

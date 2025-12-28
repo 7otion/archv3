@@ -39,7 +39,10 @@ import {
 	MenubarSeparator,
 } from '@/components/menubar';
 
+import { useDialogStore } from '@/lib/store/dialog';
+
 export const AppActions = () => {
+	const openDialog = useDialogStore(state => state.openDialog);
 	return (
 		<Menubar className="rounded-none border-0 px-0 bg-transparent gap-0">
 			<MenubarMenu>
@@ -73,7 +76,7 @@ export const AppActions = () => {
 						</MenubarSubContent>
 					</MenubarSub>
 					<MenubarSeparator />
-					<MenubarItem onSelect={() => console.log('import-dataset')}>
+					<MenubarItem onSelect={() => openDialog('import-dataset')}>
 						<DatabaseIcon className="mr-2 size-4" />
 						Import Dataset
 					</MenubarItem>

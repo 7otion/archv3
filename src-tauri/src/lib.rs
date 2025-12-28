@@ -3,9 +3,10 @@ use std::fs;
 use tauri::Manager;
 use tauri::path::BaseDirectory;
 
+mod datasets;
 mod files;
-mod utils;
 mod migrations;
+mod utils;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -52,6 +53,8 @@ pub fn run() {
             files::fetch_files::fetch_files,
             files::file_details::file_details,
             files::trash::trash,
+            datasets::download_dataset_image::download_dataset_image,
+            datasets::fetch_datasets::fetch_datasets,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

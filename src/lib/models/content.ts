@@ -1,6 +1,7 @@
 import { Model, getRepository, ORM } from '@7otion/orm';
 import { convertFileSrc } from '@tauri-apps/api/core';
 
+import { ContentType } from '@/lib/models//content-type';
 import { Category } from '@/lib/models/category';
 import { File } from '@/lib/models/file';
 import { Tag } from '@/lib/models/tag';
@@ -27,12 +28,14 @@ export class Content extends Model<Content> {
 	updated_at!: string;
 
 	// Relationships
+	contentType!: ContentType;
 	tags!: Tag[];
 	category!: Category | null;
 	file!: File | null;
 
 	protected static defineRelationships() {
 		return {
+			contentType: this.belongsTo(ContentType),
 			tags: this.belongsToMany(Tag, 'content_tags'),
 			category: this.belongsTo(Category),
 			file: this.belongsTo(File),
@@ -103,6 +106,50 @@ export class Content extends Model<Content> {
 			}
 
 			(instance as any)._metadata = metadata;
+		}
+	}
+
+	static async associateTag(content: Content, tag: Tag): Promise<void> {
+		// Check if already associated
+		const adapter = ORM.getInstance().getAdapter();
+		const existing = await adapter.query(
+			'SELECT 1 FROM content_tags WHERE content_id = ? AND tag_id = ?',
+			[content.id, tag.id],
+		);
+
+		if (existing && existing.length > 0) {
+			return;
+		}
+
+		// Insert association
+		await adapter.execute(
+			'INSERT INTO content_tags (content_id, tag_id) VALUES (?, ?)',
+			[content.id, tag.id],
+		);
+
+		// Update cached tags if loaded
+		const privateKey = '_tags';
+		if ((content as any)[privateKey]) {
+			(content as any)[privateKey] = [
+				...(content as any)[privateKey],
+				tag,
+			];
+		}
+	}
+
+	static async dissociateTag(content: Content, tag: Tag): Promise<void> {
+		const adapter = ORM.getInstance().getAdapter();
+		await adapter.execute(
+			'DELETE FROM content_tags WHERE content_id = ? AND tag_id = ?',
+			[content.id, tag.id],
+		);
+
+		// Update cached tags if loaded
+		const privateKey = '_tags';
+		if ((content as any)[privateKey]) {
+			(content as any)[privateKey] = (content as any)[privateKey].filter(
+				(t: Tag) => t.id !== tag.id,
+			);
 		}
 	}
 
