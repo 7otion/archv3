@@ -29,12 +29,7 @@ interface IconPickerProps {
 	iconSet?: string;
 }
 
-function IconPicker({
-	value,
-	onChange,
-	className,
-	iconSet = 'lucide',
-}: IconPickerProps) {
+function IconPicker({ value, onChange, iconSet = 'lucide' }: IconPickerProps) {
 	const [open, setOpen] = useState(false);
 	const [selectedIconName, setSelectedIconName] = useState<string | null>(
 		null,
@@ -110,7 +105,7 @@ function IconPicker({
 					variant="outline"
 					role="combobox"
 					aria-expanded={open}
-					className={cn('size-10 p-0', className)}
+					size="icon"
 					aria-label="Select icon"
 				>
 					{value && !selectedIconName && (

@@ -30,7 +30,7 @@ function IconPreview({
 
 	return (
 		<div
-			className={cn('size-5', className)}
+			className={cn('size-4', className)}
 			dangerouslySetInnerHTML={{ __html: svg }}
 		/>
 	);
