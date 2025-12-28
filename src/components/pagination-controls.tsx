@@ -65,7 +65,7 @@ export const PaginationControls: React.FC<PaginationControlsProps> = ({
 	const pageNumbers = getPageNumbers();
 
 	return (
-		<div className="flex w-full flex-col justify-between gap-2 items-end">
+		<div className="flex flex-col justify-between gap-2">
 			{!isCompact && (
 				<div className="ms-4 text-sm text-muted-foreground">
 					Viewing {totalItems > 0 ? startItem : 0}-{endItem} of{' '}
