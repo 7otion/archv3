@@ -10,6 +10,8 @@ type DialogType =
 	// category dialogs
 	| 'category-delete'
 	| 'category-upsert'
+	// metadata attribute dialogs
+	| 'metadata-attribute-delete'
 	| null;
 
 interface DialogState {
