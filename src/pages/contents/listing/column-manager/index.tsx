@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import {
 	DndContext,
 	closestCenter,
@@ -26,18 +26,29 @@ import {
 } from '@/components/dialog';
 
 import { useContentsStore } from '@/lib/store/contents';
+import { useCurrentContentType } from '@/lib/hooks/use-current-content-type';
 
 import { AvailableColumnItem } from './available-column-item';
 import { SortableColumnItem } from './sortable-column-item';
 import { ResetToDefault } from './reset-to-default';
+import { Input } from '@/components/input';
 
 export function ColumnManager() {
-	const [columns, addColumn, removeColumn, reorderColumn] = useContentsStore(
+	const currentContentType = useCurrentContentType();
+
+	const [
+		columns,
+		addColumn,
+		removeColumn,
+		reorderColumn,
+		refreshMetadataColumns,
+	] = useContentsStore(
 		useShallow(state => [
 			state.columns,
 			state.addColumn,
 			state.removeColumn,
 			state.reorderColumn,
+			state.refreshMetadataColumns,
 		]),
 	);
 
@@ -48,6 +59,10 @@ export function ColumnManager() {
 			},
 		}),
 	);
+
+	useEffect(() => {
+		refreshMetadataColumns();
+	}, [currentContentType?.id]);
 
 	const visibleColumns = useMemo(
 		() =>
@@ -64,6 +79,15 @@ export function ColumnManager() {
 				.sort((a, b) => a.id.localeCompare(b.id)),
 		[columns],
 	);
+
+	const [search, setSearch] = useState('');
+	const filteredAvailable = useMemo(() => {
+		const q = search.trim().toLowerCase();
+		if (!q) return availableColumns;
+		return availableColumns.filter(c =>
+			(c.label || c.id).toLowerCase().includes(q),
+		);
+	}, [availableColumns, search]);
 
 	const handleDragEnd = (event: DragEndEvent) => {
 		const { active, over } = event;
@@ -123,14 +147,22 @@ export function ColumnManager() {
 							<h3 className="text-sm font-semibold text-zinc-300">
 								Available Columns
 							</h3>
+						</div>{' '}
+						<div className="mb-2">
+							<Input
+								type="search"
+								value={search}
+								onChange={e => setSearch(e.target.value)}
+								placeholder="Search columns..."
+							/>
 						</div>
-						<div className="flex-1 space-y-2 overflow-y-auto pr-2 min-h-0">
-							{availableColumns.length === 0 ? (
+						<div className="flex flex-wrap gap-2 flex-1 space-y-2 overflow-y-auto pr-2 min-h-0">
+							{filteredAvailable.length === 0 ? (
 								<div className="flex items-center justify-center h-32 text-sm text-zinc-500">
 									All columns are currently visible
 								</div>
 							) : (
-								availableColumns.map(column => (
+								filteredAvailable.map(column => (
 									<AvailableColumnItem
 										key={column.id}
 										column={column}

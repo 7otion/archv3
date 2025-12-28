@@ -5,7 +5,12 @@ import { loadFromStorage, saveToStorage } from '@/lib/utils';
 
 import { createResourceStore, type ResourceState } from '../resource';
 import { extractContentTypeFromPath } from '../content-types';
-import { contentColumns, type ColumnConfig } from './columns';
+import {
+	contentColumns,
+	type ColumnConfig,
+	buildMetadataColumn,
+} from './columns';
+import { MetadataAttribute } from '@/lib/models/metadata-attribute';
 
 interface ContentsState extends ResourceState<Content> {
 	associateTag: (content: Content, tag: Tag) => Promise<void>;
@@ -20,6 +25,7 @@ interface ContentsState extends ResourceState<Content> {
 	removeColumn: (id: string) => void;
 	reorderColumn: (id: string, newIndex: number) => void;
 	resetColumns: () => void;
+	refreshMetadataColumns: () => Promise<void>;
 }
 
 const defaultColumns = Object.values(contentColumns);
@@ -55,17 +61,44 @@ export const useContentsStore = createResourceStore<Content, ContentsState>(
 				};
 			}
 		},
-		eagerOverride: ['category', 'tags', 'file'],
+		eagerOverride: ['category', 'tags', 'file', 'metadata'],
 	},
 	(set, get) => {
 		const storedColumns = loadFromStorage(
 			STORAGE_KEYS.COLUMNS,
 			defaultColumns,
 		);
-		const columns = syncColumnsWithDefaults(storedColumns);
+		let columns = syncColumnsWithDefaults(storedColumns);
 		saveToStorage(STORAGE_KEYS.COLUMNS, columns);
 
+		async function refreshMetadataColumns() {
+			const currentContentType = extractContentTypeFromPath();
+			if (!currentContentType) return;
+			try {
+				const attrs = await MetadataAttribute.query()
+					.where('content_type_id', currentContentType.id)
+					.orderBy('order', 'ASC')
+					.get();
+				if (attrs && attrs.length > 0) {
+					const metaCols = attrs.map(a => buildMetadataColumn(a));
+					const nonMeta = columns.filter(
+						c => !c.id.startsWith('meta:'),
+					);
+					columns = [...nonMeta, ...metaCols];
+					saveToStorage(STORAGE_KEYS.COLUMNS, columns);
+					set({ columns } as Partial<ContentsState>);
+				}
+			} catch (e) {
+				console.error(
+					'Failed to load metadata attributes for columns',
+					e,
+				);
+			}
+		}
+
 		return {
+			refreshMetadataColumns,
+
 			viewType: loadFromStorage(STORAGE_KEYS.VIEW_TYPE, 'cards'),
 			columns,
 

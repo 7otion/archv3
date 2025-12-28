@@ -1,4 +1,5 @@
 import type { Content } from '@/lib/models/content';
+import type { MetadataAttribute } from '@/lib/models/metadata-attribute';
 import { HeartIcon, StarIcon } from 'lucide-react';
 
 export type ColumnConfig = {
@@ -158,3 +159,23 @@ contentColumns.created_at = genericDateColumn('created_at');
 contentColumns.updated_at = genericDateColumn('updated_at');
 
 export { contentColumns };
+
+export function buildMetadataColumn(
+	attribute: MetadataAttribute,
+): ColumnConfig {
+	const key = `meta:${attribute.slug}`;
+	return {
+		id: key,
+		label: attribute.name,
+		visible: false,
+		order: Object.keys(contentColumns).length + 1,
+		type: 'property',
+		accessor: (content: Content) => {
+			const md = (content as any).metadata || {};
+			const val = md[attribute.slug];
+			if (val === undefined || val === null) return '-';
+			if (typeof val === 'object') return JSON.stringify(val);
+			return String(val);
+		},
+	};
+}

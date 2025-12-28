@@ -34,7 +34,7 @@ export function SortableColumnItem({
 		<div
 			ref={setNodeRef}
 			style={style}
-			className="flex items-center gap-3 bg-zinc-800/50 border border-zinc-700 rounded px-2 py-1"
+			className="flex items-center gap-1 bg-zinc-800/50 border border-zinc-700 rounded ps-2"
 		>
 			<button
 				className="cursor-grab active:cursor-grabbing text-zinc-400 hover:text-zinc-300 shrink-0"
@@ -53,10 +53,10 @@ export function SortableColumnItem({
 			<Button
 				size="sm"
 				variant="ghost"
-				className="h-8 w-8 p-0 text-zinc-400 hover:text-red-400 shrink-0"
+				className="size-7 p-0 text-zinc-400 hover:text-red-400 shrink-0 rounded-none"
 				onClick={onRemove}
 			>
-				<XIcon className="w-4 h-4" />
+				<XIcon className="size-4" />
 			</Button>
 		</div>
 	);
