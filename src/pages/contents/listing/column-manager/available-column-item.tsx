@@ -16,7 +16,7 @@ export function AvailableColumnItem({
 	return (
 		<div className="flex items-center justify-between bg-zinc-800/30 border border-zinc-700/50 rounded ps-2 gap-1 mb-0">
 			<div className="flex items-center gap-3 min-w-0 flex-1">
-				<span className="text-xs text-zinc-300 truncate">
+				<span className="text-xs text-pink-200 truncate">
 					{column.label}
 				</span>
 			</div>

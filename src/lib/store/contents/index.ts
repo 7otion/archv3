@@ -155,6 +155,7 @@ export const useContentsStore = createResourceStore<Content, ContentsState>(
 				set({
 					columns: defaultColumns,
 				} as Partial<ContentsState>);
+				get().refreshMetadataColumns();
 			},
 		};
 	},

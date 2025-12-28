@@ -160,9 +160,20 @@ contentColumns.updated_at = genericDateColumn('updated_at');
 
 export { contentColumns };
 
-export function buildMetadataColumn(
+
+export type MetadataRenderer = (
+	value: any,
+	content: Content,
 	attribute: MetadataAttribute,
-): ColumnConfig {
+) => any;
+
+const metadataRenderers: Record<string, MetadataRenderer> = {};
+
+export function registerMetadataRenderer(slug: string, fn: MetadataRenderer) {
+	metadataRenderers[slug] = fn;
+}
+
+export function buildMetadataColumn(attribute: MetadataAttribute): ColumnConfig {
 	const key = `meta:${attribute.slug}`;
 	return {
 		id: key,
@@ -174,6 +185,14 @@ export function buildMetadataColumn(
 			const md = (content as any).metadata || {};
 			const val = md[attribute.slug];
 			if (val === undefined || val === null) return '-';
+
+			// If a custom renderer exists for this attribute, use it
+			const renderer = metadataRenderers[attribute.slug];
+			if (renderer) return renderer(val, content, attribute);
+			
+			// Default rendering: if array -> implode with comma
+			if (Array.isArray(val)) return val.join(', ');
+
 			if (typeof val === 'object') return JSON.stringify(val);
 			return String(val);
 		},

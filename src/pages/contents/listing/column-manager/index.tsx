@@ -129,7 +129,7 @@ export function ColumnManager() {
 				<DialogHeader className="border-b pb-2">
 					<div className="flex items-center justify-between">
 						<div>
-							<DialogTitle className="flex items-center gap-2">
+							<DialogTitle className="flex items-center gap-2 text-green-400">
 								<BlocksIcon className="h-5 w-5" />
 								Manage Table Columns
 							</DialogTitle>
@@ -147,7 +147,7 @@ export function ColumnManager() {
 							<h3 className="text-sm font-semibold text-zinc-300">
 								Available Columns
 							</h3>
-						</div>{' '}
+						</div>
 						<div className="mb-2">
 							<Input
 								type="search"
