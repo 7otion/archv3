@@ -119,10 +119,10 @@ const ContentTypeCard = ({ contentType, itemCount }: ContentTypeCardProps) => {
 					<div className="flex justify-between items-center space-x-4 z-10">
 						<IconRenderer iconSvg={contentType.icon ?? undefined} />
 						<div className="flex flex-col text-xs text-right">
-							<p className="font-normal text-gray-50 relative z-10">
+							<p className="font-normal text-shadow-strong text-gray-50 relative z-10">
 								{itemCount} items
 							</p>
-							<p className="text-gray-400">
+							<p className="text-orange-100">
 								{new Date(
 									contentType.updated_at,
 								).toLocaleDateString()}

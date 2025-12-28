@@ -1,4 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
+import { appConfigDir } from '@tauri-apps/api/path';
+
 import type { File } from '@/lib/models/file';
 
 export interface FolderPage {
@@ -84,5 +86,11 @@ export class FileIPC {
 
 	static getPathSegments(path: string): Promise<string[]> {
 		return invoke('get_path_segments', { path });
+	}
+
+	static async coverFolderPath() {
+		const appConfigDirPath = await appConfigDir();
+		const coverFolderPath = `${appConfigDirPath}/covers`;
+		return coverFolderPath;
 	}
 }

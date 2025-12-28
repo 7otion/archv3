@@ -51,7 +51,8 @@
 						"dialog:default",
 						"clipboard-manager:default",
 						"clipboard-manager:allow-write-text",
-						"clipboard-manager:allow-read-text",{
+						"clipboard-manager:allow-read-text",
+						{
 							"identifier": "shell:allow-execute",
 							"allow": [
 								{
@@ -68,7 +69,16 @@
 								}
 							]
 						},
-						"shell:allow-open"
+						"shell:allow-open",
+						"fs:default",
+						{
+							"identifier": "fs:allow-stat",
+							"allow": [
+								{
+									"path": "**"
+								}
+							]
+						}
 					]
 				}
 			]
