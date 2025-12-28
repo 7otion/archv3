@@ -42,8 +42,14 @@ export class Content extends Model<Content> {
 		};
 	}
 
-	protected static async afterEagerLoad(instances: Content[]): Promise<void> {
-		await this.loadMetadata(instances);
+	protected static async afterEagerLoad(
+		eagerLoadKeys: MapIterator<string>,
+		instances: Content[],
+	): Promise<void> {
+		const eagerLoadKeysArray = Array.from(eagerLoadKeys);
+		if (eagerLoadKeysArray.includes('metadata')) {
+			await this.loadMetadata(instances);
+		}
 	}
 
 	private static async loadMetadata(instances: Content[]): Promise<void> {
@@ -97,7 +103,10 @@ export class Content extends Model<Content> {
 					attr => attr.id === value.attribute_id,
 				);
 				if (attribute) {
-					const metadataValue = Object.assign(new MetadataValue(), value);
+					const metadataValue = Object.assign(
+						new MetadataValue(),
+						value,
+					);
 					metadata[attribute.slug] = metadataValue.parsedValue;
 				}
 			}
