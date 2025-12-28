@@ -6,11 +6,14 @@ function Table({ className, ...props }: React.ComponentProps<'table'>) {
 	return (
 		<div
 			data-slot="table-container"
-			className="relative w-full overflow-x-auto"
+			className="relative w-full overflow-x-auto max-w-full"
 		>
 			<table
 				data-slot="table"
-				className={cn('w-full caption-bottom text-sm', className)}
+				className={cn(
+					'w-full table-auto caption-bottom text-xs sm:text-sm',
+					className,
+				)}
 				{...props}
 			/>
 		</div>
@@ -55,7 +58,7 @@ function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
 		<tr
 			data-slot="table-row"
 			className={cn(
-				'hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors',
+				'h-8 hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors',
 				className,
 			)}
 			{...props}
@@ -68,7 +71,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
 		<th
 			data-slot="table-head"
 			className={cn(
-				'text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5',
+				'wrap-break-word text-foreground h-8 px-2 text-left align-middle font-medium text-xs whitespace-normal',
 				className,
 			)}
 			{...props}
@@ -81,7 +84,7 @@ function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
 		<td
 			data-slot="table-cell"
 			className={cn(
-				'p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 *:[[role=checkbox]]:translate-y-0.5',
+				'wrap-break-word px-2 py-1 align-middle text-xs whitespace-normal', // Added break-word and changed whitespace-nowrap to whitespace-normal
 				className,
 			)}
 			{...props}
