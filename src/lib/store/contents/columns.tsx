@@ -23,6 +23,7 @@ function genericDataColumn(
 ) {
 	return {
 		id: key,
+		propertyKey: key,
 		width,
 		label:
 			label ||
@@ -42,6 +43,7 @@ function genericDateColumn(
 ) {
 	return {
 		id: key,
+		propertyKey: key,
 		width,
 		label:
 			label ||
@@ -70,6 +72,7 @@ function relationshipColumn(
 ) {
 	return {
 		id: key,
+		propertyKey: `${key}_id`,
 		width,
 		label:
 			label ||
@@ -99,6 +102,7 @@ contentColumns.id_with_cover = {
 	visible: true,
 	order: 0,
 	type: 'property',
+	propertyKey: 'id',
 	width: '60px',
 	accessor: (content: Content) => {
 		return (
@@ -106,7 +110,7 @@ contentColumns.id_with_cover = {
 				{content.coverSrc && (
 					<img
 						src={content.coverSrc}
-						className="size-9 rounded-full"
+						className="size-8 rounded-full"
 					/>
 				)}
 			</div>

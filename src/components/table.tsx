@@ -71,7 +71,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
 		<th
 			data-slot="table-head"
 			className={cn(
-				'wrap-break-word text-foreground h-8 px-2 text-left align-middle font-medium text-xs whitespace-normal',
+				'wrap-break-word text-foreground h-8 px-2 text-left align-middle font-medium text-xs whitespace-normal uppercase',
 				className,
 			)}
 			{...props}
@@ -84,7 +84,7 @@ function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
 		<td
 			data-slot="table-cell"
 			className={cn(
-				'wrap-break-word px-2 py-1 align-middle text-xs whitespace-normal', // Added break-word and changed whitespace-nowrap to whitespace-normal
+				'wrap-break-word px-2 py-1 align-middle text-xs whitespace-normal noto-sans',
 				className,
 			)}
 			{...props}

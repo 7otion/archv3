@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo } from 'react';
-import { EyeIcon, EditIcon, Trash2Icon } from 'lucide-react';
+import {
+	EyeIcon,
+	EditIcon,
+	Trash2Icon,
+	ChevronUp,
+	ChevronDown,
+} from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 
 import { Button } from '@/components/button';
@@ -41,6 +47,9 @@ const ContentListPage = () => {
 		isLoading,
 		viewType,
 		columns,
+		setOrder,
+		orderBy,
+		orderDir,
 	} = useContentsStore(
 		useShallow(state => ({
 			paginatedItems: state.paginatedItems,
@@ -52,6 +61,9 @@ const ContentListPage = () => {
 			isLoading: state.isLoading,
 			viewType: state.viewType,
 			columns: state.columns,
+			setOrder: state.setOrder,
+			orderBy: state.orderBy,
+			orderDir: state.orderDir,
 		})),
 	);
 
@@ -162,61 +174,104 @@ const ContentListPage = () => {
 				<Table className="table-auto w-full mt-2">
 					<TableHeader>
 						<TableRow>
-							{visibleColumns.map(col => (
-								<TableHead
-									key={col.id}
-									style={{ width: col.width }}
-									className="text-md text-pink-200"
-								>
-									{col.label}
-								</TableHead>
-							))}
-							<TableHead className="w-30">Actions</TableHead>
+							{visibleColumns.map(col => {
+								const field = col.propertyKey ?? col.id;
+								const isSortable = !col.id.startsWith('meta:');
+								const isActive = orderBy === field;
+								return (
+									<TableHead
+										key={col.id}
+										style={{ width: col.width }}
+										className="text-md text-pink-200"
+									>
+										<button
+											onClick={() =>
+												isSortable && setOrder(col.id)
+											}
+											disabled={!isSortable}
+											className={`flex items-center gap-2 ${isSortable ? 'cursor-pointer' : 'cursor-default opacity-90'}`}
+										>
+											<span>{col.label}</span>
+											{isActive &&
+												(orderDir === 'ASC' ? (
+													<ChevronUp className="size-4 text-zinc-300" />
+												) : (
+													<ChevronDown className="size-4 text-zinc-300" />
+												))}
+										</button>
+									</TableHead>
+								);
+							})}
+							<TableHead className="text-md text-pink-200 w-20 text-center">
+								Actions
+							</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						{paginatedItems.map(content => (
 							<TableRow key={content.id}>
 								{visibleColumns.map(col => {
-									const value =
+									let value: any = '-';
+									// Prefer accessor when available (accessors handle relations/formatting)
+									if (typeof col.accessor === 'function') {
+										value = col.accessor(content as any);
+									} else if (
 										col.type === 'property' &&
 										col.propertyKey
-											? (content as any)[col.propertyKey]
-											: col.accessor?.(content) || '-';
+									) {
+										value = (content as any)[
+											col.propertyKey
+										];
+										// If value is an object (relation), try to pick a human-friendly field
+										if (
+											value &&
+											typeof value === 'object'
+										) {
+											if (value.name) value = value.name;
+											else if (value.title)
+												value = value.title;
+											else if (value.label)
+												value = value.label;
+											else value = JSON.stringify(value);
+										}
+									}
 
 									return (
 										<TableCell
 											key={col.id}
 											className="whitespace-normal"
 										>
-											{value}
+											{value ?? '-'}
 										</TableCell>
 									);
 								})}
 								<TableCell>
-									<div className="flex gap-2">
+									<div className="flex gap-1">
 										<Button
-											size="sm"
+											className="size-7"
+											size="icon"
 											variant="ghost"
 											onClick={() => handleView(content)}
 										>
-											<EyeIcon className="w-4 h-4" />
+											<EyeIcon className="size-4" />
 										</Button>
 										<Button
-											size="sm"
+											className="size-7"
+											size="icon"
 											variant="ghost"
 											onClick={() => handleEdit(content)}
 										>
-											<EditIcon className="w-4 h-4" />
+											<EditIcon className="size-4 text-cyan-100" />
 										</Button>
 										<Button
-											size="sm"
+											className="size-7"
+											size="icon"
 											variant="ghost"
 											onClick={() =>
 												handleDelete(content)
 											}
 										>
-											<Trash2Icon className="w-4 h-4" />
+											<Trash2Icon className="size-4 text-red-300" />
 										</Button>
 									</div>
 								</TableCell>

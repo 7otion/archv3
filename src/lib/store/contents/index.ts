@@ -25,6 +25,10 @@ interface ContentsState extends ResourceState<Content> {
 	reorderColumn: (id: string, newIndex: number) => void;
 	resetColumns: () => void;
 	refreshMetadataColumns: () => Promise<void>;
+
+	orderBy?: string;
+	orderDir?: 'ASC' | 'DESC';
+	setOrder: (columnId: string) => void;
 }
 
 const STORAGE_KEYS = {
@@ -183,6 +187,36 @@ export const useContentsStore = createResourceStore<Content, ContentsState>(
 			viewType: loadFromStorage(STORAGE_KEYS.VIEW_TYPE, 'cards'),
 			columns: initialColumns,
 			refreshMetadataColumns,
+
+			orderBy: undefined,
+			orderDir: undefined,
+			setOrder(columnId: string) {
+				const cols = get().columns as ColumnConfig[];
+				const col = cols.find(c => c.id === columnId);
+				if (!col) return;
+				// skip metadata columns (unsupported ordering)
+				if (col.id.startsWith('meta:')) return;
+				const field = (col.propertyKey as string) ?? col.id;
+				const current = get() as unknown as {
+					orderBy?: string;
+					orderDir?: 'ASC' | 'DESC';
+				};
+				const currentOrder = current.orderBy;
+				const currentDir = current.orderDir ?? 'ASC';
+				let newDir: 'ASC' | 'DESC' = 'ASC';
+				if (currentOrder === field) {
+					newDir = currentDir === 'ASC' ? 'DESC' : 'ASC';
+				}
+				set({
+					orderBy: field,
+					orderDir: newDir,
+				} as Partial<ContentsState>);
+				get()
+					.paginate(1, get().pageSize)
+					.catch((e: any) =>
+						console.error('Failed to paginate after setOrder', e),
+					);
+			},
 
 			toggleViewType() {
 				const newViewType =

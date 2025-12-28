@@ -152,7 +152,19 @@ export function createResourceStore<
 						query.with(...eagerFinal);
 					}
 
-					// should we use persisted pagination state on initial load?
+					try {
+						const storeAny: any = get();
+						if (storeAny && storeAny.orderBy) {
+							const dir = (storeAny.orderDir || 'ASC').toString();
+							if (typeof (query as any).orderBy === 'function') {
+								(query as any).orderBy(
+									storeAny.orderBy,
+									dir.toLowerCase(),
+								);
+							}
+						}
+					} catch (_e) { } // ignore ordering errors
+
 					const paginatedItems = get().paginatedItems;
 					if (
 						page === defaultCurrentPage &&
