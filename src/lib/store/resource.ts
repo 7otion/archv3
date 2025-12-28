@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Model, ModelConstructor, QueryValue } from '@7otion/orm';
+import { Model, type ModelConstructor, type QueryValue } from '@7otion/orm';
 
 export interface ResourceState<T extends Model<any>> {
 	items: T[];
@@ -37,6 +37,51 @@ export interface ResourceStoreConfig<T extends Model<any>> {
 	eagerOverride?: string[];
 }
 
+interface PaginationPersistState {
+	currentPage: number;
+	totalPages: number;
+	totalItems: number;
+	pageSize: number;
+}
+
+function getStorageKey(modelName: string): string {
+	const pathname =
+		typeof window !== 'undefined' ? window.location.pathname : '';
+	const slugifiedPath = Model.generateSlug(pathname);
+	const slugifiedModel = Model.generateSlug(modelName);
+	return `${slugifiedModel}_${slugifiedPath}_table`;
+}
+
+function loadPaginationState(modelName: string): PaginationPersistState | null {
+	if (typeof window === 'undefined') return null;
+
+	try {
+		const key = getStorageKey(modelName);
+		const stored = localStorage.getItem(key);
+		if (!stored) return null;
+
+		return JSON.parse(stored);
+	} catch (error) {
+		console.warn('Failed to load pagination state:', error);
+		return null;
+	}
+}
+
+function savePaginationState(
+	modelName: string,
+	state: PaginationPersistState,
+): void {
+	if (typeof window === 'undefined') return;
+	const key = getStorageKey(modelName);
+	localStorage.setItem(key, JSON.stringify(state));
+}
+
+function clearPaginationState(modelName: string): void {
+	if (typeof window === 'undefined') return;
+	const key = getStorageKey(modelName);
+	localStorage.removeItem(key);
+}
+
 export function createResourceStore<
 	T extends Model<any>,
 	TExtended extends ResourceState<T>,
@@ -49,6 +94,11 @@ export function createResourceStore<
 ) {
 	const { model, baseFilter, eagerOverride, initialState = {} } = baseConfig;
 	const primaryKeyName = model.config.primaryKey || 'id';
+	const modelName = model.name;
+
+	const persistedState = loadPaginationState(modelName);
+	const defaultPageSize = 20;
+	const defaultCurrentPage = 1;
 
 	const store = create<TExtended>((set, get) => {
 		const baseState: ResourceState<T> = {
@@ -57,10 +107,10 @@ export function createResourceStore<
 			selectedItem: null,
 			isLoading: false,
 
-			currentPage: 1,
-			totalPages: 0,
-			totalItems: 0,
-			pageSize: 20,
+			currentPage: persistedState?.currentPage ?? defaultCurrentPage,
+			totalPages: persistedState?.totalPages ?? 0,
+			totalItems: persistedState?.totalItems ?? 0,
+			pageSize: persistedState?.pageSize ?? defaultPageSize,
 
 			async fetch() {
 				set({ isLoading: true } as Partial<TExtended>);
@@ -84,9 +134,7 @@ export function createResourceStore<
 						}
 					}
 					if (eagerOverride) {
-						for (const rel of eagerOverride) {
-							query.with(rel);
-						}
+						query.with(...eagerOverride);
 					}
 					const data = await query.get();
 					set({
@@ -99,7 +147,7 @@ export function createResourceStore<
 				}
 			},
 
-			async paginate(page = 1, limit = 20, filter?, eagerParam = []) {
+			async paginate(page = 1, limit = 20, filter?, eagerParam?) {
 				const eagerFinal = eagerParam ?? eagerOverride;
 				set({ isLoading: true } as Partial<TExtended>);
 				try {
@@ -127,11 +175,43 @@ export function createResourceStore<
 						}
 					}
 					if (eagerFinal) {
-						for (const rel of eagerFinal) {
-							query.with(rel);
-						}
+						query.with(...eagerFinal);
 					}
-					const { data, total } = await query.paginate(page, limit);
+
+					// should we use persisted pagination state on initial load?
+					const paginatedItems = get().paginatedItems;
+					if (
+						page === defaultCurrentPage &&
+						limit === defaultPageSize &&
+						persistedState &&
+						paginatedItems.length === 0
+					) {
+						page = persistedState.currentPage;
+						limit = persistedState.pageSize;
+					}
+
+					let data, total;
+					const result = await query.paginate(page, limit);
+					data = result.data;
+					total = result.total;
+					if (data.length === 0 && total > 0 && page > 1) {
+						// If the current page has no data but there are total items,
+						// it means the page is out of range
+						// Fetch the last available page.
+						clearPaginationState(modelName);
+						const lastPage = Math.ceil(total / limit);
+						const result = await query.paginate(lastPage, limit);
+						data = result.data;
+						total = result.total;
+						page = lastPage;
+					}
+
+					savePaginationState(modelName, {
+						currentPage: page,
+						totalPages: Math.ceil(total / limit),
+						totalItems: total,
+						pageSize: limit,
+					});
 
 					const totalPages = Math.ceil(total / limit);
 					set({
@@ -157,6 +237,13 @@ export function createResourceStore<
 							totalItems: state.totalItems + 1,
 						}) as Partial<TExtended>,
 				);
+
+				get()
+					.paginate(get().currentPage, get().pageSize)
+					.catch(err => {
+						console.error('Failed to paginate after add:', err);
+					});
+
 				return saved;
 			},
 
@@ -200,6 +287,12 @@ export function createResourceStore<
 							totalItems: Math.max(0, state.totalItems - 1),
 						}) as Partial<TExtended>,
 				);
+
+				get()
+					.paginate(get().currentPage, get().pageSize)
+					.catch(err => {
+						console.error('Failed to paginate after remove:', err);
+					});
 			},
 
 			setSelected(item) {
@@ -228,7 +321,6 @@ export function createResourceStore<
 	});
 
 	// Automatically set up Suspense update callback for this model
-	const modelName = model.name;
 	(model as any).setUpdateCallback?.(modelName, () => {
 		store.setState(
 			state =>
