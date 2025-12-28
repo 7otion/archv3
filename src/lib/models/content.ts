@@ -94,14 +94,11 @@ export class Content extends Model<Content> {
 			const metadata: Record<string, any> = {};
 			for (const value of values) {
 				const attribute = attributes.find(
-					attr => attr.id === value.metadata_attribute_id,
+					attr => attr.id === value.attribute_id,
 				);
 				if (attribute) {
-					const metadataValue = Object.assign(
-						new MetadataValue(),
-						value,
-					);
-					metadata[attribute.slug] = metadataValue.parsed_value;
+					const metadataValue = Object.assign(new MetadataValue(), value);
+					metadata[attribute.slug] = metadataValue.parsedValue;
 				}
 			}
 
