@@ -31,9 +31,10 @@ export const Header = () => {
 	return (
 		<div className="flex flex-col gap-2">
 			<div className="flex items-center justify-between">
-				<h1 className="text-3xl font-bold tracking-tight font-mono">
-					welcome to ARCHV3.
-				</h1>
+				<p className="text-sm">
+					Create and manage your content types. Content types define
+					the structure of this app.
+				</p>
 				<div className="flex items-center gap-2">
 					<Button variant="ghost" size="icon" disabled>
 						<CloudDownloadIcon />
@@ -60,11 +61,6 @@ export const Header = () => {
 					</Button>
 				</div>
 			</div>
-
-			<p className="text-muted-foreground font-mono text-sm">
-				Create and manage your content types. Content types define the
-				structure of this app.
-			</p>
 		</div>
 	);
 };
