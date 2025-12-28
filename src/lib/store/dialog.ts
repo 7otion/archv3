@@ -12,6 +12,8 @@ type DialogType =
 	| 'category-upsert'
 	// metadata attribute dialogs
 	| 'metadata-attribute-delete'
+	// tag dialogs
+	| 'tag-delete'
 	| null;
 
 interface DialogState {
