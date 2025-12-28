@@ -15,6 +15,7 @@ import { useDialogStore } from '@/lib/store/dialog';
 import { DatasetImporter, type Dataset } from '@/lib/services/dataset';
 
 import DatasetCard from './dataset-card';
+import { Spinner } from '@/components/spinner';
 
 const ImportDataset = () => {
 	const [datasets, setDatasets] = useState<Dataset[]>([]);
@@ -177,7 +178,7 @@ const ImportDataset = () => {
 									className="min-w-35"
 								>
 									{importLoading
-										? 'Importing...'
+										? (<><Spinner /> Importing...</>) 
 										: 'Start Importing'}
 								</Button>
 							</div>
