@@ -5,7 +5,7 @@ import {
 	MoreHorizontalIcon,
 } from 'lucide-react';
 
-import { type Button } from '@/components/button';
+import { Button } from '@/components/button';
 
 import { buttonVariants } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -36,23 +36,32 @@ function PaginationContent({
 }
 
 function PaginationItem({ ...props }: React.ComponentProps<'li'>) {
-	return <li data-slot="pagination-item" {...props} />;
+	return (
+		<li
+			className="cursor-pointer select-none"
+			data-slot="pagination-item"
+			{...props}
+		/>
+	);
 }
 
 type PaginationLinkProps = {
 	isActive?: boolean;
+	disabled?: boolean;
 } & Pick<React.ComponentProps<typeof Button>, 'size'> &
-	React.ComponentProps<'a'>;
+	React.ComponentProps<'button'>;
 
 function PaginationLink({
 	className,
 	isActive,
+	disabled,
 	size = 'icon',
 	...props
 }: PaginationLinkProps) {
 	return (
-		<a
+		<button
 			aria-current={isActive ? 'page' : undefined}
+			disabled={disabled}
 			data-slot="pagination-link"
 			data-active={isActive}
 			className={cn(
@@ -69,33 +78,39 @@ function PaginationLink({
 
 function PaginationPrevious({
 	className,
+	disabled = false,
 	...props
-}: React.ComponentProps<typeof PaginationLink>) {
+}: React.ComponentProps<typeof PaginationLink> & {
+	disabled?: boolean;
+}) {
 	return (
 		<PaginationLink
 			aria-label="Go to previous page"
 			size="default"
-			className={cn('gap-1 px-2.5 sm:pl-2.5', className)}
+			disabled={disabled}
+			className={cn('gap-1 px-2.5 sm:pl-2.5 cursor-pointer', className)}
 			{...props}
 		>
 			<ChevronLeftIcon />
-			<span className="hidden sm:block">Previous</span>
 		</PaginationLink>
 	);
 }
 
 function PaginationNext({
 	className,
+	disabled = false,
 	...props
-}: React.ComponentProps<typeof PaginationLink>) {
+}: React.ComponentProps<typeof PaginationLink> & {
+	disabled?: boolean;
+}) {
 	return (
 		<PaginationLink
 			aria-label="Go to next page"
 			size="default"
-			className={cn('gap-1 px-2.5 sm:pr-2.5', className)}
+			disabled={disabled}
+			className={cn('gap-1 px-2.5 sm:pr-2.5 cursor-pointer', className)}
 			{...props}
 		>
-			<span className="hidden sm:block">Next</span>
 			<ChevronRightIcon />
 		</PaginationLink>
 	);
