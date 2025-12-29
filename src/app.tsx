@@ -2,6 +2,8 @@ import { Suspense, useEffect, useState } from 'react';
 import { Router } from 'wouter';
 import { ORM, SQLiteDialect, TauriAdapter } from '@7otion/orm';
 
+import Layout from '@/layout';
+
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Loading } from '@/components/loading';
 import { Toaster } from '@/components/sonner';
@@ -48,11 +50,13 @@ function App() {
 				}}
 			/>
 			<DialogCoordinator />
-			<Suspense fallback={<Loading />}>
-				<Router>
-					<AppRouter />
-				</Router>
-			</Suspense>
+			<Layout>
+				<Suspense fallback={<Loading />}>
+					<Router>
+						<AppRouter />
+					</Router>
+				</Suspense>
+			</Layout>
 		</ErrorBoundary>
 	);
 }

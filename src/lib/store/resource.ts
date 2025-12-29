@@ -163,7 +163,7 @@ export function createResourceStore<
 								);
 							}
 						}
-					} catch (_e) { } // ignore ordering errors
+					} catch (_e) {} // ignore ordering errors
 
 					const paginatedItems = get().paginatedItems;
 					if (

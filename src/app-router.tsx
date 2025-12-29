@@ -1,31 +1,13 @@
-import { lazy } from 'react';
 import { Route, Switch } from 'wouter';
 
-import Layout from '@/layout';
-
-const ContentTypeListPage = lazy(() => import('@/pages/content-types/listing'));
-const ManageContentTypePage = lazy(
-	() => import('@/pages/content-types/manage'),
-);
-const ContentListPage = lazy(() => import('@/pages/contents/listing'));
-
-const Placeholder = lazy(() => import('@/pages/placeholder'));
+import routes from '@/routes';
 
 export function AppRouter() {
 	return (
-		<Layout>
-			<Switch>
-				<Route path="/" component={ContentTypeListPage} />
-				<Route
-					path="/content-types/:contentType/manage/:section?"
-					component={ManageContentTypePage}
-				/>
-				<Route
-					path="/content-types/:contentType"
-					component={ContentListPage}
-				/>
-				<Route path="/video-downloader" component={Placeholder} />
-			</Switch>
-		</Layout>
+		<Switch>
+			{routes.map(r => (
+				<Route key={r.path} path={r.path} component={r.component} />
+			))}
+		</Switch>
 	);
 }
