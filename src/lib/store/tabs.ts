@@ -102,6 +102,10 @@ export class TabsStore extends Store {
 			const next =
 				remaining[index - 1] ?? remaining[index] ?? remaining[0];
 			next.isActive = true;
+
+			if (typeof window !== 'undefined') {
+				window.history.replaceState(null, '', next.path);
+			}
 		}
 
 		this._setTabs(

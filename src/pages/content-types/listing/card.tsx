@@ -69,26 +69,16 @@ const ContentTypeCard = ({ contentType, itemCount }: ContentTypeCardProps) => {
 		dialogStore.openDialog('content-type-delete');
 	};
 
-	const handleCardClick = (e: React.MouseEvent) => {
-		const target = e.target as HTMLElement;
-
-		if (
-			target.closest('button') ||
-			target.closest('[role="button"]') ||
-			target.closest('.interactive-element')
-		) {
-			return;
-		}
-
-		navigate(`/content-types/${contentType.slug}`);
-	};
-
 	const handleManageLink = (e: React.MouseEvent) => {
 		e.stopPropagation();
 		navigate(`/content-types/${contentType.slug}/manage`);
 	};
 
 	const handleMiddleClick = (e: React.MouseEvent) => {
+		if (e.button === 0) {
+			navigate(`/content-types/${contentType.slug}`);
+		}
+
 		if (e.button === 1) {
 			e.preventDefault();
 			tabsStore.addTab({
@@ -112,8 +102,7 @@ const ContentTypeCard = ({ contentType, itemCount }: ContentTypeCardProps) => {
 		<ContextMenu onOpenChange={setIsContextMenuOpen}>
 			<ContextMenuTrigger asChild>
 				<div
-					onClick={handleCardClick}
-					onMouseDown={e => handleMiddleClick(e)}
+					onMouseDown={handleMiddleClick}
 					className={cn(
 						'overflow-hidden relative card hover:shadow-lg dark:hover:shadow-blue-800/10 dark:hover:border-blue-700/20 hover:cursor-pointer rounded-md w-full h-full flex flex-col justify-between p-4 bg-cover z-2 bg-center group hover:-translate-y-0.5 ransition-all duration-200 ease-out',
 						contentType.coverSrc

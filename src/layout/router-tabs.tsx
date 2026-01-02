@@ -14,7 +14,7 @@ import { useStore, useObservable } from '@/lib/store';
 import { TabsStore, type Tab } from '@/lib/store/tabs';
 
 export function RouterTabs() {
-	const [location, navigate] = useLocation();
+	const [, navigate] = useLocation();
 
 	const tabsStore = useStore(TabsStore);
 	const tabs = useObservable(tabsStore.tabs);
@@ -58,13 +58,6 @@ export function RouterTabs() {
 
 		return () => ro.disconnect();
 	}, [tabs]);
-
-	useEffect(() => {
-		const activeTab = tabs.find(tab => tab.isActive);
-		if (activeTab && activeTab.path !== location) {
-			navigate(activeTab.path);
-		}
-	}, [tabs, location, navigate]);
 
 	const handleTabClick = useCallback(
 		(tab: Tab) => {
