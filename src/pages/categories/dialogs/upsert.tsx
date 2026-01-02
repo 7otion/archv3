@@ -25,11 +25,13 @@ import { Input } from '@/components/input';
 import { Textarea } from '@/components/textarea';
 import { Label } from '@/components/label';
 
-import { useCategoriesStore } from '@/lib/store/categories';
-import { useContentTypesStore } from '@/lib/store/content-types';
-import { useDialogStore } from '@/lib/store/dialog';
-import { toastError } from '@/lib/utils';
+import { useStore, useObservable } from '@/lib/store';
+import { CategoriesStore } from '@/lib/store/categories';
+import { ContentTypesStore } from '@/lib/store/content-types';
+import { DialogStore } from '@/lib/store/dialog';
+
 import { FileIPC } from '@/lib/services/file';
+import { toastError } from '@/lib/utils';
 
 const categorySchema = z.object({
 	name: z.string().min(1, { message: 'Name is required.' }),
@@ -43,13 +45,11 @@ type FormData = z.infer<typeof categorySchema>;
 export default function UpsertCategory() {
 	const [isLoading, setIsLoading] = useState(false);
 
-	const selectedContentType = useContentTypesStore(
-		state => state.selectedItem,
-	);
-	const selectedCategory = useCategoriesStore(state => state.selectedItem);
-	const closeDialog = useDialogStore(state => state.closeDialog);
-	const addCategory = useCategoriesStore(state => state.add);
-	const updateCategory = useCategoriesStore(state => state.update);
+	const contentTypesStore = useStore(ContentTypesStore);
+	const selectedContentType = useObservable(contentTypesStore.selectedItem);
+	const categoriesStore = useStore(CategoriesStore);
+	const selectedCategory = useObservable(categoriesStore.selectedItem);
+	const dialogStore = useStore(DialogStore);
 
 	const isEditing = !!selectedCategory;
 	const form = useForm<FormData>({
@@ -131,7 +131,7 @@ export default function UpsertCategory() {
 					newCoverGIFAdded = true;
 				}
 
-				await updateCategory(selectedCategory.id, {
+				await categoriesStore.update(selectedCategory.id, {
 					name: data.name,
 					description: data.description || null,
 					cover: finalCoverPath,
@@ -163,7 +163,7 @@ export default function UpsertCategory() {
 					data.cover_gif = await handleCoverFile(data.cover_gif);
 				}
 
-				await addCategory({
+				await categoriesStore.add({
 					content_type_id: selectedContentType.id,
 					name: data.name,
 					description: data.description || null,
@@ -173,7 +173,7 @@ export default function UpsertCategory() {
 				toast.success(`"${data.name}" has been created successfully`);
 			}
 
-			closeDialog();
+			dialogStore.closeDialog();
 		} catch (error) {
 			toastError(error, 'Failed to save category');
 		} finally {
@@ -266,7 +266,7 @@ export default function UpsertCategory() {
 						<Button
 							type="button"
 							variant="outline"
-							onClick={closeDialog}
+							onClick={dialogStore.closeDialog}
 							disabled={isLoading}
 						>
 							Cancel

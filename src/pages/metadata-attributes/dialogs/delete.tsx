@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import { toast } from 'sonner';
 
 import {
@@ -10,29 +9,28 @@ import {
 } from '@/components/dialog';
 import { Button } from '@/components/button';
 
-import { useDialogStore } from '@/lib/store/dialog';
-import { useMetadataAttributesStore } from '@/lib/store/metadata-attributes';
+import { useStore, useObservable } from '@/lib/store';
+import { DialogStore } from '@/lib/store/dialog';
+import { MetadataAttributesStore } from '@/lib/store/metadata-attributes';
 import { toastError } from '@/lib/utils';
 
 export default function DeleteMetadataAttribute() {
 	const [isLoading, setIsLoading] = useState(false);
 
-	const [selectedMetadataAttribute, removeMetadataAttribute] =
-		useMetadataAttributesStore(
-			useShallow(state => [state.selectedItem, state.remove]),
-		);
-	const closeDialog = useDialogStore(state => state.closeDialog);
+	const store = useStore(MetadataAttributesStore);
+	const selectedMetadataAttribute = useObservable(store.selectedItem);
+	const dialogStore = useStore(DialogStore);
 
 	const handleDelete = async () => {
 		if (!selectedMetadataAttribute) return;
 
 		setIsLoading(true);
 		try {
-			await removeMetadataAttribute(selectedMetadataAttribute);
+			await store.remove(selectedMetadataAttribute);
 			toast.success(
 				`"${selectedMetadataAttribute.name}" has been deleted successfully`,
 			);
-			closeDialog();
+			dialogStore.closeDialog();
 		} catch (error) {
 			toastError(error, 'Failed to delete metadata attribute');
 		} finally {

@@ -4,7 +4,8 @@ import { GripVerticalIcon } from 'lucide-react';
 import { Button } from '@/components/button';
 
 import type { ContentType } from '@/lib/models/content-type';
-import { useContentTypesStore } from '@/lib/store/content-types';
+import { useStore, useObservable } from '@/lib/store';
+import { ContentTypesStore } from '@/lib/store/content-types';
 import { cn } from '@/lib/utils';
 
 import ContentTypeCard from './card';
@@ -18,7 +19,8 @@ const DraggableContentTypeCard = ({
 	contentType,
 	itemCount,
 }: DraggableContentTypeCardProps) => {
-	const isDraggable = useContentTypesStore(state => state.isDraggable);
+	const contentTypesStore = useStore(ContentTypesStore);
+	const isDraggable = useObservable(contentTypesStore.isDraggable);
 
 	return (
 		<SortableWrapper id={contentType.id} isDraggable={isDraggable}>

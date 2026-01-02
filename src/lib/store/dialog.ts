@@ -1,6 +1,6 @@
-import { create } from 'zustand';
+import { Store, Observable } from '@/lib/store';
 
-type DialogType =
+export type DialogType =
 	// Tool dialogs
 	| 'import-dataset'
 	// content type dialogs
@@ -18,14 +18,14 @@ type DialogType =
 	| 'content-upsert'
 	| null;
 
-interface DialogState {
-	activeDialog: DialogType;
-	openDialog: (type: DialogType) => void;
-	closeDialog: () => void;
-}
+export class DialogStore extends Store {
+	activeDialog = new Observable<DialogType>(null);
 
-export const useDialogStore = create<DialogState>(set => ({
-	activeDialog: null,
-	openDialog: type => set({ activeDialog: type }),
-	closeDialog: () => set({ activeDialog: null }),
-}));
+	openDialog(type: DialogType) {
+		this.activeDialog.set(type);
+	}
+
+	closeDialog() {
+		this.activeDialog.set(null);
+	}
+}

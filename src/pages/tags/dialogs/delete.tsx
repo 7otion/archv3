@@ -9,27 +9,28 @@ import {
 } from '@/components/dialog';
 import { Button } from '@/components/button';
 
-import { useTagsStore } from '@/lib/store/tags';
-import { useDialogStore } from '@/lib/store/dialog';
+import { useStore, useObservable } from '@/lib/store';
+import { TagsStore } from '@/lib/store/tags';
+import { DialogStore } from '@/lib/store/dialog';
 import { toastError } from '@/lib/utils';
 
 export default function DeleteTag() {
 	const [isLoading, setIsLoading] = useState(false);
 
-	const selectedTag = useTagsStore(state => state.selectedItem);
-	const removeTag = useTagsStore(state => state.remove);
-	const closeDialog = useDialogStore(state => state.closeDialog);
+	const tagsStore = useStore(TagsStore);
+	const selectedTag = useObservable(tagsStore.selectedItem);
+	const dialogStore = useStore(DialogStore);
 
 	const handleDelete = async () => {
 		if (!selectedTag) return;
 
 		setIsLoading(true);
 		try {
-			await removeTag(selectedTag);
+			await tagsStore.remove(selectedTag);
 			toast.success(
 				`"${selectedTag.name}" has been deleted successfully`,
 			);
-			closeDialog();
+			dialogStore.closeDialog();
 		} catch (error) {
 			toastError(error, 'Failed to delete tag');
 		} finally {

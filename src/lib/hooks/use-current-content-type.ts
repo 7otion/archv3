@@ -1,11 +1,17 @@
-import { useContentTypesStore } from '@/lib/store/content-types';
-import { useRoute } from 'wouter';
+import type { ContentType } from '../models/content-type';
+import { ContentTypesStore } from '../store/content-types';
+import { useObservable, useStore } from '../store';
 
-export const useCurrentContentType = () => {
-	const contentTypes = useContentTypesStore(state => state.items);
-	const [, params] = useRoute('/content-types/:contentType');
-	const currentContentType = params?.contentType
-		? contentTypes.find(ct => ct.slug === params.contentType)
-		: undefined;
-	return currentContentType;
-};
+export function useCurrentContentType(): ContentType | undefined {
+	const store = useStore(ContentTypesStore);
+	const contentTypes = useObservable(store.items);
+
+	const pathName =
+		typeof window !== 'undefined' ? window.location.pathname : '';
+	if (!pathName.startsWith('/content-types/')) return undefined;
+
+	const [, , slug] = pathName.split('/');
+	if (!slug) return undefined;
+
+	return contentTypes.find(ct => ct.slug === slug);
+}

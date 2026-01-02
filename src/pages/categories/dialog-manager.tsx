@@ -1,10 +1,10 @@
 import { Suspense, lazy } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 
 import { Dialog, DialogContent, DialogTitle } from '@/components/dialog';
 import { Loading } from '@/components/loading';
 
-import { useDialogStore } from '@/lib/store/dialog';
+import { useStore, useObservable } from '@/lib/store';
+import { DialogStore } from '@/lib/store/dialog';
 
 const UpsertCategory = lazy(() => import('./dialogs/upsert'));
 const DeleteCategory = lazy(() => import('./dialogs/delete'));
@@ -12,9 +12,8 @@ const DeleteCategory = lazy(() => import('./dialogs/delete'));
 const categoriesDialogs = ['category-upsert', 'category-delete'];
 
 export function CategoriesDialogManager() {
-	const [activeDialog, closeDialog] = useDialogStore(
-		useShallow(state => [state.activeDialog, state.closeDialog]),
-	);
+	const dialogStore = useStore(DialogStore);
+	const activeDialog = useObservable(dialogStore.activeDialog);
 
 	if (!activeDialog || !categoriesDialogs.includes(activeDialog as any)) {
 		return null;
@@ -32,7 +31,10 @@ export function CategoriesDialogManager() {
 	};
 
 	return (
-		<Dialog open={true} onOpenChange={open => !open && closeDialog()}>
+		<Dialog
+			open={true}
+			onOpenChange={open => !open && dialogStore.closeDialog()}
+		>
 			<DialogTitle className="sr-only" />
 			<DialogContent
 				aria-describedby={undefined}

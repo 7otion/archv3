@@ -19,8 +19,9 @@ import {
 	MetadataAttribute,
 	type AttributeType,
 } from '@/lib/models/metadata-attribute';
-import { useDialogStore } from '@/lib/store/dialog';
-import { useMetadataAttributesStore } from '@/lib/store/metadata-attributes';
+import { useStore } from '@/lib/store';
+import { DialogStore } from '@/lib/store/dialog';
+import { MetadataAttributesStore } from '@/lib/store/metadata-attributes';
 
 const ATTRIBUTE_TYPES: { value: AttributeType; label: string }[] = [
 	{ value: 'text', label: 'Text' },
@@ -60,15 +61,13 @@ export const MetadataAttributeRow = memo<MetadataAttributeRowProps>(
 		order,
 		isFiltering = false,
 	}) => {
-		const setSelectedMetadataAttribute = useMetadataAttributesStore(
-			state => state.setSelected,
-		);
-		const openDialog = useDialogStore(state => state.openDialog);
+		const metadataAttributesStore = useStore(MetadataAttributesStore);
+		const dialogStore = useStore(DialogStore);
 
 		const handleDelete = () => {
 			if (attribute) {
-				setSelectedMetadataAttribute(attribute);
-				openDialog('metadata-attribute-delete');
+				metadataAttributesStore.setSelected(attribute);
+				dialogStore.openDialog('metadata-attribute-delete');
 			}
 		};
 

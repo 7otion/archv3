@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import {
 	DndContext,
 	closestCenter,
@@ -17,7 +16,8 @@ import {
 	arrayMove,
 } from '@dnd-kit/sortable';
 
-import { useContentTypesStore } from '@/lib/store/content-types';
+import { useStore, useObservable } from '@/lib/store';
+import { ContentTypesStore } from '@/lib/store/content-types';
 import { cn } from '@/lib/utils';
 
 import { DraggableContentTypeCard } from './draggable-card';
@@ -25,91 +25,78 @@ import { EmptyResult } from './empty-result';
 import { Header } from './header';
 
 export default function ContentTypesPage() {
+	const store = useStore(ContentTypesStore);
+
+	const contentTypes = useObservable(store.items);
+	const contentTypeCounts = useObservable(store.contentTypeCounts);
+	const isDraggable = useObservable(store.isDraggable);
+
 	const [activeId, setActiveId] = useState<string | number | null>(null);
 	const [overId, setOverId] = useState<string | number | null>(null);
-
-	const [
-		contentTypes,
-		contentTypeCounts,
-		isDraggable,
-		updateOrder,
-		fetchContentTypeCounts,
-	] = useContentTypesStore(
-		useShallow(state => [
-			state.items,
-			state.contentTypeCounts,
-			state.isDraggable,
-			state.updateOrder,
-			state.fetchContentTypeCounts,
-		]),
-	);
 
 	const sensors = useSensors(useSensor(PointerSensor));
 
 	useEffect(() => {
+		store.fetch();
+	}, [store]);
+
+	useEffect(() => {
 		if (contentTypes.length > 0) {
-			fetchContentTypeCounts();
+			store.fetchContentTypeCounts();
 		}
-	}, [fetchContentTypeCounts, contentTypes]);
+	}, [store, contentTypes.length]);
 
 	const handleDragStart = useCallback((event: any) => {
 		setActiveId(event.active.id);
 	}, []);
 
 	const handleDragOver = useCallback((event: DragOverEvent) => {
-		setOverId(event.over?.id || null);
+		setOverId(event.over?.id ?? null);
 	}, []);
 
-	const handleDragEnd = async (event: DragEndEvent) => {
-		const { active, over } = event;
+	const handleDragEnd = useCallback(
+		async (event: DragEndEvent) => {
+			const { active, over } = event;
 
-		setActiveId(null);
-		setOverId(null);
+			setActiveId(null);
+			setOverId(null);
 
-		if (active.id !== over?.id) {
-			const currentContentTypes = contentTypes;
-			const oldIndex = currentContentTypes.findIndex(
-				contentType => contentType.id === active.id,
-			);
-			const overIndex = currentContentTypes.findIndex(
-				contentType => contentType.id === over?.id,
-			);
+			if (!over || active.id === over.id) return;
 
-			if (oldIndex !== -1 && overIndex !== -1) {
-				const newContentTypes = arrayMove(
-					currentContentTypes,
-					oldIndex,
-					overIndex,
-				);
-				updateOrder(newContentTypes);
-			}
-		}
-	};
+			const oldIndex = contentTypes.findIndex(ct => ct.id === active.id);
+			const newIndex = contentTypes.findIndex(ct => ct.id === over.id);
+
+			if (oldIndex === -1 || newIndex === -1) return;
+
+			const reordered = arrayMove(contentTypes, oldIndex, newIndex);
+			await store.updateOrder(reordered);
+		},
+		[store, contentTypes],
+	);
 
 	const customCollisionDetection: CollisionDetection = useCallback(args => {
-		const intersectionCollisions = rectIntersection(args);
+		const intersections = rectIntersection(args);
 
-		if (intersectionCollisions.length > 0) {
-			const sortedCollisions = intersectionCollisions.sort((a, b) => {
+		if (intersections.length > 0) {
+			const sorted = intersections.sort((a, b) => {
 				const rectA = args.droppableRects.get(a.id);
 				const rectB = args.droppableRects.get(b.id);
 				const pointer = args.pointerCoordinates;
 
 				if (!rectA || !rectB || !pointer) return 0;
 
-				const distanceA = Math.sqrt(
-					Math.pow(pointer.x - (rectA.left + rectA.width / 2), 2) +
-						Math.pow(pointer.y - (rectA.top + rectA.height / 2), 2),
-				);
-				const distanceB = Math.sqrt(
-					Math.pow(pointer.x - (rectB.left + rectB.width / 2), 2) +
-						Math.pow(pointer.y - (rectB.top + rectB.height / 2), 2),
-				);
+				const distA =
+					(pointer.x - (rectA.left + rectA.width / 2)) ** 2 +
+					(pointer.y - (rectA.top + rectA.height / 2)) ** 2;
 
-				return distanceA - distanceB;
+				const distB =
+					(pointer.x - (rectB.left + rectB.width / 2)) ** 2 +
+					(pointer.y - (rectB.top + rectB.height / 2)) ** 2;
+
+				return distA - distB;
 			});
 
-			return [sortedCollisions[0]];
+			return [sorted[0]];
 		}
 
 		return closestCenter(args);
@@ -133,22 +120,20 @@ export default function ContentTypesPage() {
 							strategy={rectSortingStrategy}
 							disabled={!isDraggable}
 						>
-							{contentTypes.map(contentType => (
+							{contentTypes.map(ct => (
 								<div
-									key={`content-type-card-${contentType.id}`}
+									key={ct.id}
 									className={cn(
 										'relative h-96',
-										overId === contentType.id &&
-											activeId !== contentType.id
+										overId === ct.id && activeId !== ct.id
 											? 'bg-secondary/50 rounded-lg'
 											: '',
 									)}
 								>
 									<DraggableContentTypeCard
-										contentType={contentType}
+										contentType={ct}
 										itemCount={
-											contentTypeCounts[contentType.id] ||
-											0
+											contentTypeCounts[ct.id] ?? 0
 										}
 									/>
 								</div>

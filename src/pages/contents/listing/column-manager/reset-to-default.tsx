@@ -11,10 +11,11 @@ import {
 } from '@/components/alert-dialog';
 import { Button } from '@/components/button';
 
-import { useContentsStore } from '@/lib/store/contents';
+import { useStore } from '@/lib/store';
+import { ContentsStore } from '@/lib/store/contents';
 
 export const ResetToDefault = () => {
-	const resetColumns = useContentsStore(state => state.resetColumns);
+	const store = useStore(ContentsStore);
 
 	return (
 		<AlertDialog>
@@ -35,7 +36,7 @@ export const ResetToDefault = () => {
 					<AlertDialogCancel>Cancel</AlertDialogCancel>
 					<AlertDialogAction
 						onClick={() => {
-							resetColumns();
+							store.resetColumns();
 						}}
 					>
 						Reset

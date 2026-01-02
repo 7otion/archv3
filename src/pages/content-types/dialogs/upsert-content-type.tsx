@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -42,10 +41,12 @@ import {
 	SelectValue,
 } from '@/components/select';
 
-import { useContentTypesStore } from '@/lib/store/content-types';
-import { useDialogStore } from '@/lib/store/dialog';
-import { toastError } from '@/lib/utils';
+import { useStore, useObservable } from '@/lib/store';
+import { ContentTypesStore } from '@/lib/store/content-types';
+import { DialogStore } from '@/lib/store/dialog';
+
 import { FileIPC } from '@/lib/services/file';
+import { toastError } from '@/lib/utils';
 
 const contentTypeSchema = z.object({
 	name: z.string().min(1, { message: 'Name is required.' }),
@@ -63,12 +64,9 @@ type FormData = z.infer<typeof contentTypeSchema>;
 export default function UpsertContentType() {
 	const [isLoading, setIsLoading] = useState(false);
 
-	const [selectedContentType, updateContentType, addContentType] =
-		useContentTypesStore(
-			useShallow(state => [state.selectedItem, state.update, state.add]),
-		);
-
-	const closeDialog = useDialogStore(state => state.closeDialog);
+	const contentTypesStore = useStore(ContentTypesStore);
+	const selectedContentType = useObservable(contentTypesStore.selectedItem);
+	const dialogStore = useStore(DialogStore);
 
 	const isEditing = !!selectedContentType;
 	const form = useForm<FormData>({
@@ -133,7 +131,7 @@ export default function UpsertContentType() {
 					}
 				}
 
-				await updateContentType(selectedContentType.id, {
+				await contentTypesStore.update(selectedContentType.id, {
 					name: data.name,
 					file_type: data.file_type,
 					description: data.description || null,
@@ -150,7 +148,7 @@ export default function UpsertContentType() {
 					data.cover = await handleCoverFile(data.cover);
 				}
 
-				await addContentType({
+				await contentTypesStore.add({
 					name: data.name,
 					file_type: data.file_type,
 					description: data.description || null,
@@ -164,7 +162,7 @@ export default function UpsertContentType() {
 				toast.success(`"${data.name}" has been created successfully`);
 			}
 
-			closeDialog();
+			dialogStore.closeDialog();
 		} catch (error) {
 			toastError(
 				error,
@@ -387,7 +385,7 @@ export default function UpsertContentType() {
 					<Button
 						type="button"
 						variant="outline"
-						onClick={closeDialog}
+						onClick={dialogStore.closeDialog}
 						disabled={isLoading}
 					>
 						Cancel

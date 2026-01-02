@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import { PlusIcon, SearchIcon } from 'lucide-react';
 import { z } from 'zod';
 
@@ -17,9 +16,11 @@ import {
 } from '@/components/table';
 import { LayoutBreadcrumb } from '@/layout/breadcrumb';
 
-import { useTagsStore } from '@/lib/store/tags';
+import { useStore, useObservable } from '@/lib/store';
+import { TagsStore } from '@/lib/store/tags';
+
+import type { Tag } from '@/lib/models/tag';
 import { useCurrentContentType } from '@/lib/hooks/use-current-content-type';
-import { Tag } from '@/lib/models/tag';
 import { toastError } from '@/lib/utils';
 
 import { TagRow } from './row';
@@ -49,14 +50,8 @@ const TagsPage = () => {
 
 	const currentContentType = useCurrentContentType();
 
-	const [tags, fetchTags, addTag, updateTag] = useTagsStore(
-		useShallow(state => [
-			state.items,
-			state.fetch,
-			state.add,
-			state.update,
-		]),
-	);
+	const tagsStore = useStore(TagsStore);
+	const tags = useObservable(tagsStore.items);
 
 	const filteredTags = useMemo(() => {
 		if (!filterQuery.trim()) {
@@ -76,13 +71,13 @@ const TagsPage = () => {
 		const fetchData = async () => {
 			setIsLoading(true);
 			try {
-				await fetchTags();
+				await tagsStore.fetch();
 			} finally {
 				setIsLoading(false);
 			}
 		};
 		fetchData();
-	}, [fetchTags]);
+	}, []);
 
 	useEffect(() => {
 		if (!filterToggle) {
@@ -131,7 +126,7 @@ const TagsPage = () => {
 				if (id === 'new') {
 					if (!currentContentType) return;
 
-					await addTag({
+					await tagsStore.add({
 						content_type_id: currentContentType.id,
 						name: data.name,
 						slug: data.name.toLowerCase().replace(/\s+/g, '-'),
@@ -140,7 +135,7 @@ const TagsPage = () => {
 				} else {
 					const existingTag = tags.find(tag => tag.id === id);
 					if (existingTag) {
-						await updateTag(existingTag.id, {
+						await tagsStore.update(existingTag.id, {
 							name: data.name,
 							slug: data.name.toLowerCase().replace(/\s+/g, '-'),
 							description: data.description,
@@ -153,14 +148,7 @@ const TagsPage = () => {
 				toastError(error, 'Error saving tag');
 			}
 		},
-		[
-			editableData,
-			currentContentType,
-			tags,
-			addTag,
-			updateTag,
-			handleCancel,
-		],
+		[editableData, currentContentType, tags, handleCancel],
 	);
 
 	const handleAddNew = useCallback(() => {

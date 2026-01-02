@@ -6,7 +6,6 @@ import {
 	ChevronUp,
 	ChevronDown,
 } from 'lucide-react';
-import { useShallow } from 'zustand/react/shallow';
 
 import { Button } from '@/components/button';
 import {
@@ -17,13 +16,6 @@ import {
 	ContextMenuSeparator,
 } from '@/components/context-menu';
 import { PaginationControls } from '@/components/pagination-controls';
-
-import { useContentsStore } from '@/lib/store/contents';
-import { useCurrentContentType } from '@/lib/hooks/use-current-content-type';
-
-import { ContentListToolbar } from './toolbar';
-import { ContentVideoCard } from './cards/video';
-import { ContentGenericCard } from './cards/generic';
 import {
 	Table,
 	TableBody,
@@ -32,40 +24,30 @@ import {
 	TableHeader,
 	TableRow,
 } from '@/components/table';
+
+import { useStore, useObservable } from '@/lib/store';
+import { ContentsStore } from '@/lib/store/contents';
+import { useCurrentContentType } from '@/lib/hooks/use-current-content-type';
+
+import { ContentListToolbar } from './toolbar';
+import { ContentVideoCard } from './cards/video';
+import { ContentGenericCard } from './cards/generic';
 import { EmptyResult } from './empty-result';
 
 const ContentListPage = () => {
 	const currentContentType = useCurrentContentType();
 
-	const {
-		paginatedItems,
-		currentPage,
-		totalPages,
-		totalItems,
-		pageSize,
-		paginate,
-		isLoading,
-		viewType,
-		columns,
-		setOrder,
-		orderBy,
-		orderDir,
-	} = useContentsStore(
-		useShallow(state => ({
-			paginatedItems: state.paginatedItems,
-			currentPage: state.currentPage,
-			totalPages: state.totalPages,
-			totalItems: state.totalItems,
-			pageSize: state.pageSize,
-			paginate: state.paginate,
-			isLoading: state.isLoading,
-			viewType: state.viewType,
-			columns: state.columns,
-			setOrder: state.setOrder,
-			orderBy: state.orderBy,
-			orderDir: state.orderDir,
-		})),
-	);
+	const contentStore = useStore(ContentsStore);
+	const paginatedItems = useObservable(contentStore.paginatedItems);
+	const currentPage = useObservable(contentStore.currentPage);
+	const totalPages = useObservable(contentStore.totalPages);
+	const totalItems = useObservable(contentStore.totalItems);
+	const pageSize = useObservable(contentStore.pageSize);
+	const isLoading = useObservable(contentStore.isLoading);
+	const viewType = useObservable(contentStore.viewType);
+	const columns = useObservable(contentStore.columns);
+	const orderBy = useObservable(contentStore.orderBy);
+	const orderDir = useObservable(contentStore.orderDir);
 
 	const visibleColumns = useMemo(() => {
 		return columns
@@ -74,8 +56,8 @@ const ContentListPage = () => {
 	}, [columns]);
 
 	useEffect(() => {
-		paginate(currentPage, pageSize);
-	}, [currentPage, pageSize]);
+		contentStore.paginate(currentPage, pageSize);
+	}, [currentPage, pageSize, currentContentType?.id]);
 
 	const handleView = useCallback((content: any) => {
 		console.log('View content:', content);
@@ -158,11 +140,11 @@ const ContentListPage = () => {
 					perPage={pageSize}
 					onPageChange={page => {
 						if (page >= 1 && page <= totalPages) {
-							paginate(page, pageSize);
+							contentStore.paginate(page, pageSize);
 						}
 					}}
 					onPerPageChange={per => {
-						paginate(1, per);
+						contentStore.paginate(1, per);
 					}}
 				/>
 			</div>
@@ -186,7 +168,8 @@ const ContentListPage = () => {
 									>
 										<button
 											onClick={() =>
-												isSortable && setOrder(col.id)
+												isSortable &&
+												contentStore.setOrder(col.id)
 											}
 											disabled={!isSortable}
 											className={`flex items-center gap-2 ${isSortable ? 'cursor-pointer' : 'cursor-default opacity-90'}`}

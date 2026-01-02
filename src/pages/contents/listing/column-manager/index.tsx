@@ -12,7 +12,6 @@ import {
 	verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { BlocksIcon, Columns3Icon } from 'lucide-react';
-import { useShallow } from 'zustand/react/shallow';
 
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/tooltip';
 import { Button } from '@/components/button';
@@ -24,34 +23,20 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from '@/components/dialog';
+import { Input } from '@/components/input';
 
-import { useContentsStore } from '@/lib/store/contents';
+import { useStore, useObservable } from '@/lib/store';
+import { ContentsStore } from '@/lib/store/contents';
 import { useCurrentContentType } from '@/lib/hooks/use-current-content-type';
 
 import { AvailableColumnItem } from './available-column-item';
 import { SortableColumnItem } from './sortable-column-item';
 import { ResetToDefault } from './reset-to-default';
-import { Input } from '@/components/input';
 
 export function ColumnManager() {
 	const currentContentType = useCurrentContentType();
-
-	const [
-		columns,
-		addColumn,
-		removeColumn,
-		reorderColumn,
-		refreshMetadataColumns,
-	] = useContentsStore(
-		useShallow(state => [
-			state.columns,
-			state.addColumn,
-			state.removeColumn,
-			state.reorderColumn,
-			state.refreshMetadataColumns,
-		]),
-	);
-
+	const contentStore = useStore(ContentsStore);
+	const columns = useObservable(contentStore.columns);
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
 			activationConstraint: {
@@ -61,7 +46,7 @@ export function ColumnManager() {
 	);
 
 	useEffect(() => {
-		refreshMetadataColumns();
+		contentStore.refreshMetadataColumns();
 	}, [currentContentType?.id]);
 
 	const visibleColumns = useMemo(
@@ -97,17 +82,17 @@ export function ColumnManager() {
 			const newIndex = visibleColumns.findIndex(c => c.id === over.id);
 
 			if (oldIndex !== -1 && newIndex !== -1) {
-				reorderColumn(active.id as string, newIndex);
+				contentStore.reorderColumn(active.id as string, newIndex);
 			}
 		}
 	};
 
 	const handleAddColumn = (columnId: string) => {
-		addColumn(columnId);
+		contentStore.addColumn(columnId);
 	};
 
 	const handleRemoveColumn = (columnId: string) => {
-		removeColumn(columnId);
+		contentStore.removeColumn(columnId);
 	};
 
 	return (

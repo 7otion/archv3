@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import { toast } from 'sonner';
 
 import {
@@ -10,29 +9,30 @@ import {
 } from '@/components/dialog';
 import { Button } from '@/components/button';
 
-import { useContentTypesStore } from '@/lib/store/content-types';
-import { useDialogStore } from '@/lib/store/dialog';
+import { ContentTypesStore } from '@/lib/store/content-types';
+
+import { useObservable, useStore } from '@/lib/store';
+import { DialogStore } from '@/lib/store/dialog';
 import { toastError } from '@/lib/utils';
 
 export default function DeleteContentType() {
 	const [isLoading, setIsLoading] = useState(false);
 
-	const [selectedContentType, removeContentType] = useContentTypesStore(
-		useShallow(state => [state.selectedItem, state.remove]),
-	);
+	const contentTypesStore = useStore(ContentTypesStore);
+	const selectedContentType = useObservable(contentTypesStore.selectedItem);
 
-	const closeDialog = useDialogStore(state => state.closeDialog);
+	const dialogStore = useStore(DialogStore);
 
 	const handleDelete = async () => {
 		if (!selectedContentType) return;
 
 		setIsLoading(true);
 		try {
-			await removeContentType(selectedContentType);
+			await contentTypesStore.remove(selectedContentType);
 			toast.success(
 				`"${selectedContentType.name}" has been deleted successfully`,
 			);
-			closeDialog();
+			dialogStore.closeDialog();
 		} catch (error) {
 			toastError(error, 'Failed to delete content type');
 		} finally {

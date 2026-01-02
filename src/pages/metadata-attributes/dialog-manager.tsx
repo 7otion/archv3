@@ -1,19 +1,18 @@
 import { Suspense, lazy } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 
 import { Dialog, DialogContent, DialogTitle } from '@/components/dialog';
 import { Loading } from '@/components/loading';
 
-import { useDialogStore } from '@/lib/store/dialog';
+import { useStore, useObservable } from '@/lib/store';
+import { DialogStore } from '@/lib/store/dialog';
 
 const DeleteMetadataAttribute = lazy(() => import('./dialogs/delete'));
 
 const metadataAttributesDialogs = ['metadata-attribute-delete'];
 
 export function MetadataAttributesDialogManager() {
-	const [activeDialog, closeDialog] = useDialogStore(
-		useShallow(state => [state.activeDialog, state.closeDialog]),
-	);
+	const dialogStore = useStore(DialogStore);
+	const activeDialog = useObservable(dialogStore.activeDialog);
 
 	if (
 		!activeDialog ||
@@ -32,7 +31,10 @@ export function MetadataAttributesDialogManager() {
 	};
 
 	return (
-		<Dialog open={true} onOpenChange={open => !open && closeDialog()}>
+		<Dialog
+			open={true}
+			onOpenChange={open => !open && dialogStore.closeDialog()}
+		>
 			<DialogTitle className="sr-only" />
 			<DialogContent
 				aria-describedby={undefined}

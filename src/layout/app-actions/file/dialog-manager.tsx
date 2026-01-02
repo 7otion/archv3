@@ -3,15 +3,15 @@ import { Suspense, lazy } from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/dialog';
 import { Loading } from '@/components/loading';
 
-import { useDialogStore } from '@/lib/store/dialog';
+import { useStore, useObservable } from '@/lib/store';
+import { DialogStore } from '@/lib/store/dialog';
 
 const ImportDataset = lazy(() => import('./import-dataset'));
-
-const fileDialogs = ['import-dataset'] as const;
+const fileDialogs = ['import-dataset'];
 
 export function FileDialogManager() {
-	const activeDialog = useDialogStore(state => state.activeDialog);
-	const closeDialog = useDialogStore(state => state.closeDialog);
+	const dialogStore = useStore(DialogStore);
+	const activeDialog = useObservable(dialogStore.activeDialog);
 
 	if (!activeDialog || !fileDialogs.includes(activeDialog as any)) {
 		return null;
@@ -27,7 +27,10 @@ export function FileDialogManager() {
 	};
 
 	return (
-		<Dialog open={true} onOpenChange={open => !open && closeDialog()}>
+		<Dialog
+			open={true}
+			onOpenChange={open => !open && dialogStore.closeDialog()}
+		>
 			<DialogTitle className="sr-only" />
 			<DialogContent
 				aria-describedby={undefined}

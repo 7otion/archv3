@@ -9,9 +9,11 @@ import {
 	ContextMenuSeparator,
 } from '@/components/context-menu';
 
-import { useCategoriesStore } from '@/lib/store/categories';
-import { useDialogStore } from '@/lib/store/dialog';
 import type { Category } from '@/lib/models/category';
+
+import { useStore } from '@/lib/store';
+import { CategoriesStore } from '@/lib/store/categories';
+import { DialogStore } from '@/lib/store/dialog';
 import { cn } from '@/lib/utils';
 
 const STRIPE_CONFIG = {
@@ -33,17 +35,17 @@ export const CategoryCard = ({ category }: CategoryCardProps) => {
 	const [isHovered, setIsHovered] = useState(false);
 	const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
 
-	const setSelectedCategory = useCategoriesStore(state => state.setSelected);
-	const openDialog = useDialogStore(state => state.openDialog);
+	const categoriesStore = useStore(CategoriesStore);
+	const dialogStore = useStore(DialogStore);
 
 	const handleEdit = () => {
-		setSelectedCategory(category);
-		openDialog('category-upsert');
+		categoriesStore.setSelected(category);
+		dialogStore.openDialog('category-upsert');
 	};
 
 	const handleDelete = () => {
-		setSelectedCategory(category);
-		openDialog('category-delete');
+		categoriesStore.setSelected(category);
+		dialogStore.openDialog('category-delete');
 	};
 
 	const cardStyle = useMemo(() => {

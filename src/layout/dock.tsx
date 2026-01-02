@@ -2,10 +2,13 @@ import { useMemo } from 'react';
 import { DownloadIcon, HomeIcon } from 'lucide-react';
 
 import { FloatingDock } from '@/components/floating-dock';
-import { useContentTypesStore } from '@/lib/store/content-types';
+
+import { useStore, useObservable } from '@/lib/store';
+import { ContentTypesStore } from '@/lib/store/content-types';
 
 export function Dock() {
-	const contentTypes = useContentTypesStore(state => state.items);
+	const contentTypesStore = useStore(ContentTypesStore);
+	const contentTypes = useObservable(contentTypesStore.items);
 	const dockedContentTypes = contentTypes.filter(ct => ct.docked === 1);
 
 	const links = useMemo(() => {

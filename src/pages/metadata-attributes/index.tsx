@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import { MoveDownIcon, PlusIcon, SearchIcon } from 'lucide-react';
 import { z } from 'zod';
 import {
@@ -30,8 +29,9 @@ import {
 } from '@/components/table';
 import { LayoutBreadcrumb } from '@/layout/breadcrumb';
 
+import { useStore, useObservable } from '@/lib/store';
+import { MetadataAttributesStore } from '@/lib/store/metadata-attributes';
 import type { MetadataAttribute } from '@/lib/models/metadata-attribute';
-import { useMetadataAttributesStore } from '@/lib/store/metadata-attributes';
 import { useCurrentContentType } from '@/lib/hooks/use-current-content-type';
 import { toastError } from '@/lib/utils';
 
@@ -65,19 +65,8 @@ const MetadataAttributesPage = () => {
 
 	const currentContentType = useCurrentContentType();
 
-	const [
-		metadataAttributes,
-		fetchMetadataAttributes,
-		addMetadataAttribute,
-		updateMetadataAttribute,
-	] = useMetadataAttributesStore(
-		useShallow(state => [
-			state.items,
-			state.fetch,
-			state.add,
-			state.update,
-		]),
-	);
+	const metadataAttrStore = useStore(MetadataAttributesStore);
+	const metadataAttributes = useObservable(metadataAttrStore.items);
 
 	const displayAttributes =
 		optimisticAttributes.length > 0
@@ -111,13 +100,13 @@ const MetadataAttributesPage = () => {
 		const fetchData = async () => {
 			setIsLoading(true);
 			try {
-				await fetchMetadataAttributes();
+				await metadataAttrStore.fetch();
 			} finally {
 				setIsLoading(false);
 			}
 		};
 		fetchData();
-	}, [fetchMetadataAttributes]);
+	}, []);
 
 	useEffect(() => {
 		if (!filterToggle) {
@@ -169,7 +158,7 @@ const MetadataAttributesPage = () => {
 				if (id === 'new') {
 					if (!currentContentType) return;
 
-					await addMetadataAttribute({
+					await metadataAttrStore.add({
 						content_type_id: currentContentType.id,
 						name: data.name!,
 						attribute_type: data.attribute_type!,
@@ -181,7 +170,7 @@ const MetadataAttributesPage = () => {
 						description: data.description,
 					});
 				} else {
-					await updateMetadataAttribute(id, {
+					await metadataAttrStore.update(id, {
 						name: data.name!,
 						attribute_type: data.attribute_type!,
 						icon: data.icon,
@@ -206,13 +195,7 @@ const MetadataAttributesPage = () => {
 				toastError(error, 'Error saving attribute');
 			}
 		},
-		[
-			editableData,
-			currentContentType,
-			metadataAttributes.length,
-			addMetadataAttribute,
-			updateMetadataAttribute,
-		],
+		[editableData, currentContentType, metadataAttributes.length],
 	);
 
 	const handleCancel = useCallback((id: number | 'new') => {
@@ -279,7 +262,7 @@ const MetadataAttributesPage = () => {
 			try {
 				await Promise.all(
 					reorderedAttributes.map((attr, index) =>
-						updateMetadataAttribute(attr.id, {
+						metadataAttrStore.update(attr.id, {
 							...attr,
 							order: index + 1,
 						}),
@@ -291,7 +274,7 @@ const MetadataAttributesPage = () => {
 				setOptimisticAttributes([]);
 			}
 		},
-		[filteredAttributes, filterToggle, updateMetadataAttribute],
+		[filteredAttributes, filterToggle],
 	);
 
 	return (

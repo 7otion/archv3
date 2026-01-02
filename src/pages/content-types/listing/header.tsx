@@ -1,31 +1,24 @@
-import { useShallow } from 'zustand/react/shallow';
 import { CloudDownloadIcon, LockIcon, MoveIcon, PlusIcon } from 'lucide-react';
 
 import { Button } from '@/components/button';
 
-import { useContentTypesStore } from '@/lib/store/content-types';
-import { useDialogStore } from '@/lib/store/dialog';
+import { useStore, useObservable } from '@/lib/store';
+import { ContentTypesStore } from '@/lib/store/content-types';
+import { DialogStore } from '@/lib/store/dialog';
 import { cn } from '@/lib/utils';
 
 export const Header = () => {
-	const [isDraggable, setDraggable, setSelectedContentType] =
-		useContentTypesStore(
-			useShallow(state => [
-				state.isDraggable,
-				state.setDraggable,
-				state.setSelected,
-			]),
-		);
-
-	const openDialog = useDialogStore(state => state.openDialog);
+	const contentTypesStore = useStore(ContentTypesStore);
+	const isDraggable = useObservable(contentTypesStore.isDraggable);
+	const dialogStore = useStore(DialogStore);
 
 	const handleCreateContentType = () => {
-		setSelectedContentType(null);
-		openDialog('content-type-upsert');
+		contentTypesStore.setSelected(null);
+		dialogStore.openDialog('content-type-upsert');
 	};
 
 	const handleToggleDraggable = () => {
-		setDraggable(!isDraggable);
+		contentTypesStore.setDraggable(!isDraggable);
 	};
 
 	return (

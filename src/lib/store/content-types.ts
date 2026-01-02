@@ -3,101 +3,91 @@ import { getRepository } from '@7otion/orm';
 import { ContentType } from '@/lib/models/content-type';
 import { Content } from '@/lib/models/content';
 
-import { createResourceStore, type ResourceState } from './resource';
+import { Observable } from '@/lib/store';
+import { ResourceStore } from '@/lib/store/resource';
 
-export const extractContentTypeFromPath = (): ContentType | undefined => {
+export async function extractContentTypeFromPath(): Promise<ContentType> {
 	const pathName = window.location.pathname;
-	if (pathName.startsWith('/content-types/')) {
-		const params = pathName.split('/');
-		const contentTypeSlug = params[2];
-		const contentTypes = useContentTypesStore.getState().items;
-		const currentContentType = contentTypeSlug
-			? contentTypes.find(ct => ct.slug === contentTypeSlug)
-			: undefined;
-		return currentContentType;
-	}
-};
+	const [, , slug] = pathName.split('/');
 
-interface ContentTypesState extends ResourceState<ContentType> {
-	contentTypeCounts: Record<number, number>;
-	isDraggable: boolean;
-
-	fetchContentTypeCounts: () => Promise<Record<number, number>>;
-	updateOrder: (contentTypes: ContentType[]) => Promise<void>;
-	setDraggable: (draggable: boolean) => void;
+	const contentTypeRepo = getRepository(ContentType);
+	const contentTypeBySlug = (await contentTypeRepo
+		.query()
+		.where('slug', slug)
+		.first()) as ContentType;
+	return contentTypeBySlug;
 }
 
-export const useContentTypesStore = createResourceStore<
-	ContentType,
-	ContentTypesState
->(
-	{
-		model: ContentType,
-	},
-	(set, get) => ({
-		contentTypeCounts: {},
-		isDraggable: false,
+export class ContentTypesStore extends ResourceStore<ContentType> {
+	contentTypeCounts = new Observable<Record<number, number>>({});
+	isDraggable = new Observable(false);
 
-		async fetch() {
-			const { items } = get();
-			if (items.length > 0) return;
+	constructor() {
+		super({
+			model: ContentType,
+		});
+	}
 
-			set({ isLoading: true } as Partial<ContentTypesState>);
-			try {
-				const contentTypeRepo = getRepository(ContentType);
-				const data = await contentTypeRepo
+	override async fetch() {
+		if (this.items.get().length > 0) return;
+
+		this.isLoading.set(true);
+		try {
+			const repo = getRepository(ContentType);
+			const data = await repo.query().orderBy('order', 'asc').get();
+
+			this.items.set(data);
+			this.isLoading.set(false);
+		} catch (e) {
+			this.isLoading.set(false);
+			throw e;
+		}
+	}
+
+	async fetchContentTypeCounts(): Promise<Record<number, number>> {
+		const items = this.items.get();
+		const contentRepo = getRepository(Content);
+
+		const counts = await Promise.all(
+			items.map(async ct => {
+				const res = await contentRepo
 					.query()
-					.orderBy('order', 'asc')
-					.get();
-				set({
-					items: data,
-					isLoading: false,
-				} as Partial<ContentTypesState>);
-			} catch (error) {
-				set({ isLoading: false } as Partial<ContentTypesState>);
-				throw error;
-			}
-		},
+					.selectRaw('COUNT(*) as count')
+					.where('content_type_id', ct.id)
+					.first();
 
-		async fetchContentTypeCounts() {
-			const { items } = get();
-			const contentRepo = getRepository(Content);
-			const countsMap = await Promise.all(
-				items.map(async contentType => {
-					const count = await contentRepo
-						.query()
-						.selectRaw('COUNT(*) as count')
-						.where('content_type_id', contentType.id)
-						.first()
-						.then(res => (res ? Number((res as any).count) : 0));
-					return { id: contentType.id, count };
-				}),
-			);
+				return {
+					id: ct.id,
+					count: res ? Number((res as any).count) : 0,
+				};
+			}),
+		);
 
-			const newCounts = countsMap.reduce(
-				(acc, { id, count }) => {
-					acc[id] = count;
-					return acc;
-				},
-				{} as Record<number, number>,
-			);
+		const map = counts.reduce(
+			(acc, { id, count }) => {
+				acc[id] = count;
+				return acc;
+			},
+			{} as Record<number, number>,
+		);
 
-			set({ contentTypeCounts: newCounts } as Partial<ContentTypesState>);
-			return newCounts;
-		},
+		this.contentTypeCounts.set(map);
 
-		async updateOrder(contentTypesToUpdate) {
-			await Promise.all(
-				contentTypesToUpdate.map(ct => {
-					ct.order = contentTypesToUpdate.indexOf(ct) + 1;
-					return ct.save();
-				}),
-			);
-			set({ items: contentTypesToUpdate } as Partial<ContentTypesState>);
-		},
+		return map;
+	}
 
-		setDraggable(draggable) {
-			set({ isDraggable: draggable } as Partial<ContentTypesState>);
-		},
-	}),
-);
+	async updateOrder(contentTypes: ContentType[]) {
+		await Promise.all(
+			contentTypes.map((ct, index) => {
+				ct.order = index + 1;
+				return ct.save();
+			}),
+		);
+
+		this.items.set(contentTypes);
+	}
+
+	setDraggable(draggable: boolean) {
+		this.isDraggable.set(draggable);
+	}
+}

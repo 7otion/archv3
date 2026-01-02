@@ -8,10 +8,17 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { Loading } from '@/components/loading';
 import { Toaster } from '@/components/sonner';
 
+import { StoreProvider, useObservable, useStore } from '@/lib/store';
+import { TabsStore } from '@/lib/store/tabs';
+
 import { AppRouter } from './app-router';
 import { DialogCoordinator } from './dialog-coordinator';
 
 function App() {
+	const tabsStore = useStore(TabsStore);
+	const tabs = useObservable(tabsStore.tabs);
+	const activeTab = tabs.find(t => t.isActive);
+
 	const [dbInitialized, setDbInitialized] = useState(false);
 
 	const initializeDatabase = async () => {
@@ -50,13 +57,17 @@ function App() {
 				}}
 			/>
 			<DialogCoordinator />
-			<Layout>
-				<Suspense fallback={<Loading />}>
-					<Router>
-						<AppRouter />
-					</Router>
-				</Suspense>
-			</Layout>
+			{activeTab && (
+				<StoreProvider stores={activeTab.stores}>
+					<Layout>
+						<Suspense fallback={<Loading />}>
+							<Router>
+								<AppRouter />
+							</Router>
+						</Suspense>
+					</Layout>
+				</StoreProvider>
+			)}
 		</ErrorBoundary>
 	);
 }

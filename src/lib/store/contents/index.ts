@@ -1,35 +1,17 @@
 import { Content } from '@/lib/models/content';
-import type { Tag } from '@/lib/models/tag';
 import { MetadataAttribute } from '@/lib/models/metadata-attribute';
 
+import { Observable } from '@/lib/store';
+import { ResourceStore } from '@/lib/store/resource';
+import { extractContentTypeFromPath } from '@/lib/store/content-types';
+
 import { loadFromStorage, saveToStorage } from '@/lib/utils';
-import { createResourceStore, type ResourceState } from '../resource';
-import { extractContentTypeFromPath } from '../content-types';
+
 import {
 	contentColumns,
 	type ColumnConfig,
 	buildMetadataColumn,
 } from './columns';
-
-interface ContentsState extends ResourceState<Content> {
-	associateTag: (content: Content, tag: Tag) => Promise<void>;
-	setContentMetadata: (
-		contentId: number,
-		metadata: Record<string, any>,
-	) => Promise<void>;
-	viewType: 'cards' | 'table';
-	toggleViewType: () => void;
-	columns: ColumnConfig[];
-	addColumn: (id: string) => void;
-	removeColumn: (id: string) => void;
-	reorderColumn: (id: string, newIndex: number) => void;
-	resetColumns: () => void;
-	refreshMetadataColumns: () => Promise<void>;
-
-	orderBy?: string;
-	orderDir?: 'ASC' | 'DESC';
-	setOrder: (columnId: string) => void;
-}
 
 const STORAGE_KEYS = {
 	VIEW_TYPE: 'contents_view_type',
@@ -79,9 +61,6 @@ function syncColumnsWithDefaults(storedColumns: any): ColumnConfig[] {
 	return [...mergedDefaults, ...dynamicColumns];
 }
 
-/**
- * Updates a column's visibility in the column array
- */
 function updateColumnVisibility(
 	columns: ColumnConfig[],
 	id: string,
@@ -90,9 +69,6 @@ function updateColumnVisibility(
 	return columns.map(col => (col.id === id ? { ...col, visible } : col));
 }
 
-/**
- * Reorders columns based on visible columns only
- */
 function reorderColumns(
 	columns: ColumnConfig[],
 	id: string,
@@ -116,146 +92,126 @@ function reorderColumns(
 	});
 }
 
-export const useContentsStore = createResourceStore<Content, ContentsState>(
-	{
-		model: Content,
-		baseFilter: () => {
-			const currentContentType = extractContentTypeFromPath();
-			return currentContentType
-				? { content_type_id: currentContentType.id }
-				: undefined;
-		},
-		eagerOverride: ['category', 'tags', 'file', 'metadata'],
-	},
-	(set, get) => {
-		// Initialize columns from storage
-		const storedColumns = loadFromStorage(
-			STORAGE_KEYS.COLUMNS,
-			defaultColumns,
+export class ContentsStore extends ResourceStore<Content> {
+	viewType = new Observable<'cards' | 'table'>('cards');
+	columns = new Observable<ColumnConfig[]>(defaultColumns);
+	orderBy = new Observable<string | undefined>(undefined);
+	orderDir = new Observable<'ASC' | 'DESC' | undefined>(undefined);
+
+	constructor() {
+		super({
+			model: Content,
+			baseFilter: async () => {
+				const currentContentType = await extractContentTypeFromPath();
+				return currentContentType
+					? { content_type_id: currentContentType.id }
+					: undefined;
+			},
+			eagerOverride: ['category', 'tags', 'file', 'metadata'],
+		});
+
+		this.viewType.set(loadFromStorage(STORAGE_KEYS.VIEW_TYPE, 'cards'));
+		this.columns.set(
+			syncColumnsWithDefaults(
+				loadFromStorage(STORAGE_KEYS.COLUMNS, defaultColumns),
+			),
 		);
-		const initialColumns = syncColumnsWithDefaults(storedColumns);
-		saveToStorage(STORAGE_KEYS.COLUMNS, initialColumns);
+	}
 
-		/**
-		 * Refreshes metadata columns from the database and merges with existing preferences
-		 */
-		async function refreshMetadataColumns() {
-			const currentContentType = extractContentTypeFromPath();
-			if (!currentContentType) return;
+	toggleViewType() {
+		this.viewType.update((v: 'cards' | 'table') =>
+			v === 'cards' ? 'table' : 'cards',
+		);
+		saveToStorage(STORAGE_KEYS.VIEW_TYPE, this.viewType.get());
+	}
 
-			try {
-				const attributes = await MetadataAttribute.query()
-					.where('content_type_id', currentContentType.id)
-					.orderBy('order', 'ASC')
-					.get();
+	addColumn(id: string) {
+		this.columns.update((cols: ColumnConfig[]) =>
+			updateColumnVisibility(cols, id, true),
+		);
+		saveToStorage(STORAGE_KEYS.COLUMNS, this.columns.get());
+	}
 
-				if (!attributes?.length) return;
+	removeColumn(id: string) {
+		this.columns.update((cols: ColumnConfig[]) =>
+			updateColumnVisibility(cols, id, false),
+		);
+		saveToStorage(STORAGE_KEYS.COLUMNS, this.columns.get());
+	}
 
-				const currentColumns = get().columns;
-				const currentColumnMap = new Map(
-					currentColumns.map(c => [c.id, c]),
-				);
+	reorderColumn(id: string, newIndex: number) {
+		this.columns.update((cols: ColumnConfig[]) =>
+			reorderColumns(cols, id, newIndex),
+		);
+		saveToStorage(STORAGE_KEYS.COLUMNS, this.columns.get());
+	}
 
-				// Build metadata columns and preserve user preferences
-				const metadataColumns = attributes
-					.map(attr => buildMetadataColumn(attr))
-					.map(col => {
-						const stored = currentColumnMap.get(col.id);
-						return {
-							...col,
-							visible: stored?.visible ?? col.visible,
-							order: stored?.order ?? col.order,
-						};
-					});
+	resetColumns() {
+		this.columns.set(defaultColumns);
+		saveToStorage(STORAGE_KEYS.COLUMNS, defaultColumns);
+		this.refreshMetadataColumns();
+	}
 
-				const nonMetadataColumns = currentColumns.filter(
-					c => !c.id.startsWith('meta:'),
-				);
-
-				const newColumns = [...nonMetadataColumns, ...metadataColumns];
-				saveToStorage(STORAGE_KEYS.COLUMNS, newColumns);
-				set({ columns: newColumns } as Partial<ContentsState>);
-			} catch (error) {
-				console.error(
-					'Failed to load metadata attributes for columns:',
-					error,
-				);
-			}
+	setOrder(columnId: string) {
+		const cols = this.columns.get();
+		const col = cols.find((c: ColumnConfig) => c.id === columnId);
+		if (!col || col.id.startsWith('meta:')) return;
+		const field = (col.propertyKey as string) ?? col.id;
+		const currentOrder = this.orderBy.get();
+		const currentDir = this.orderDir.get() ?? 'ASC';
+		let newDir: 'ASC' | 'DESC' = 'ASC';
+		if (currentOrder === field) {
+			newDir = currentDir === 'ASC' ? 'DESC' : 'ASC';
 		}
+		this.orderBy.set(field);
+		this.orderDir.set(newDir);
+		this.paginate(1, this.pageSize.get()).catch(e =>
+			console.error('Failed to paginate after setOrder', e),
+		);
+	}
 
-		return {
-			viewType: loadFromStorage(STORAGE_KEYS.VIEW_TYPE, 'cards'),
-			columns: initialColumns,
-			refreshMetadataColumns,
+	async refreshMetadataColumns() {
+		const currentContentType = await extractContentTypeFromPath();
+		if (!currentContentType) return;
 
-			orderBy: undefined,
-			orderDir: undefined,
-			setOrder(columnId: string) {
-				const cols = get().columns as ColumnConfig[];
-				const col = cols.find(c => c.id === columnId);
-				if (!col) return;
-				// skip metadata columns (unsupported ordering)
-				if (col.id.startsWith('meta:')) return;
-				const field = (col.propertyKey as string) ?? col.id;
-				const current = get() as unknown as {
-					orderBy?: string;
-					orderDir?: 'ASC' | 'DESC';
-				};
-				const currentOrder = current.orderBy;
-				const currentDir = current.orderDir ?? 'ASC';
-				let newDir: 'ASC' | 'DESC' = 'ASC';
-				if (currentOrder === field) {
-					newDir = currentDir === 'ASC' ? 'DESC' : 'ASC';
-				}
-				set({
-					orderBy: field,
-					orderDir: newDir,
-				} as Partial<ContentsState>);
-				get()
-					.paginate(1, get().pageSize)
-					.catch((e: any) =>
-						console.error('Failed to paginate after setOrder', e),
-					);
-			},
+		try {
+			const attributes = await MetadataAttribute.query()
+				.where('content_type_id', currentContentType.id)
+				.orderBy('order', 'ASC')
+				.get();
 
-			toggleViewType() {
-				const newViewType =
-					get().viewType === 'cards' ? 'table' : 'cards';
-				saveToStorage(STORAGE_KEYS.VIEW_TYPE, newViewType);
-				set({ viewType: newViewType } as Partial<ContentsState>);
-			},
+			if (!attributes?.length) return;
 
-			addColumn(id) {
-				const newColumns = updateColumnVisibility(
-					get().columns,
-					id,
-					true,
-				);
-				saveToStorage(STORAGE_KEYS.COLUMNS, newColumns);
-				set({ columns: newColumns } as Partial<ContentsState>);
-			},
+			const currentColumns = this.columns.get();
+			const currentColumnMap = new Map(
+				currentColumns.map((c: ColumnConfig) => [c.id, c]),
+			);
 
-			removeColumn(id) {
-				const newColumns = updateColumnVisibility(
-					get().columns,
-					id,
-					false,
-				);
-				saveToStorage(STORAGE_KEYS.COLUMNS, newColumns);
-				set({ columns: newColumns } as Partial<ContentsState>);
-			},
+			const metadataColumns = attributes
+				.map(attr => buildMetadataColumn(attr))
+				.map(col => {
+					const stored = currentColumnMap.get(col.id) as
+						| ColumnConfig
+						| undefined;
+					return {
+						...col,
+						visible: stored?.visible ?? col.visible,
+						order: stored?.order ?? col.order,
+					};
+				});
 
-			reorderColumn(id, newIndex) {
-				const newColumns = reorderColumns(get().columns, id, newIndex);
-				saveToStorage(STORAGE_KEYS.COLUMNS, newColumns);
-				set({ columns: newColumns } as Partial<ContentsState>);
-			},
+			const nonMetadataColumns = currentColumns.filter(
+				(c: ColumnConfig) => !c.id.startsWith('meta:'),
+			);
 
-			resetColumns() {
-				saveToStorage(STORAGE_KEYS.COLUMNS, defaultColumns);
-				set({ columns: defaultColumns } as Partial<ContentsState>);
-				get().refreshMetadataColumns();
-			},
-		};
-	},
-);
+			const newColumns = [...nonMetadataColumns, ...metadataColumns];
+			this.columns.set(newColumns);
+			saveToStorage(STORAGE_KEYS.COLUMNS, newColumns);
+		} catch (error) {
+			console.error(
+				'Failed to load metadata attributes for columns:',
+				error,
+			);
+		}
+	}
+}

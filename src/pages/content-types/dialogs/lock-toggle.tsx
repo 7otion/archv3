@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import { toast } from 'sonner';
 
 import {
@@ -10,18 +9,17 @@ import {
 } from '@/components/dialog';
 import { Button } from '@/components/button';
 
-import { useContentTypesStore } from '@/lib/store/content-types';
-import { useDialogStore } from '@/lib/store/dialog';
+import { useStore, useObservable } from '@/lib/store';
+import { ContentTypesStore } from '@/lib/store/content-types';
+import { DialogStore } from '@/lib/store/dialog';
 import { toastError } from '@/lib/utils';
 
 export default function LockToggleContentType() {
 	const [isLoading, setIsLoading] = useState(false);
 
-	const [selectedContentType, updateContentType] = useContentTypesStore(
-		useShallow(state => [state.selectedItem, state.update]),
-	);
-
-	const closeDialog = useDialogStore(state => state.closeDialog);
+	const contentTypesStore = useStore(ContentTypesStore);
+	const selectedContentType = useObservable(contentTypesStore.selectedItem);
+	const dialogStore = useStore(DialogStore);
 
 	const isCurrentlyLocked = selectedContentType?.locked || false;
 	const action = isCurrentlyLocked ? 'unlock' : 'lock';
@@ -32,13 +30,13 @@ export default function LockToggleContentType() {
 
 		setIsLoading(true);
 		try {
-			await updateContentType(selectedContentType.id, {
+			await contentTypesStore.update(selectedContentType.id, {
 				locked: selectedContentType.locked ? 0 : 1,
 			});
 			toast.success(
 				`"${selectedContentType.name}" has been ${actionPast}`,
 			);
-			closeDialog();
+			dialogStore.closeDialog();
 		} catch (error) {
 			toastError(error, `Failed to ${action} content type:`);
 		} finally {

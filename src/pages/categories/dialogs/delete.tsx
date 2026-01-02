@@ -9,27 +9,28 @@ import {
 } from '@/components/dialog';
 import { Button } from '@/components/button';
 
-import { useCategoriesStore } from '@/lib/store/categories';
-import { useDialogStore } from '@/lib/store/dialog';
+import { useStore, useObservable } from '@/lib/store';
+import { CategoriesStore } from '@/lib/store/categories';
+import { DialogStore } from '@/lib/store/dialog';
 import { toastError } from '@/lib/utils';
 
 export default function DeleteCategory() {
 	const [isLoading, setIsLoading] = useState(false);
 
-	const selectedCategory = useCategoriesStore(state => state.selectedItem);
-	const closeDialog = useDialogStore(state => state.closeDialog);
-	const removeCategory = useCategoriesStore(state => state.remove);
+	const categoriesStore = useStore(CategoriesStore);
+	const selectedCategory = useObservable(categoriesStore.selectedItem);
+	const dialogStore = useStore(DialogStore);
 
 	const handleDelete = async () => {
 		if (!selectedCategory) return;
 
 		setIsLoading(true);
 		try {
-			await removeCategory(selectedCategory);
+			await categoriesStore.remove(selectedCategory);
 			toast.success(
 				`"${selectedCategory.name}" has been deleted successfully`,
 			);
-			closeDialog();
+			dialogStore.closeDialog();
 		} catch (error) {
 			toastError(error, 'Failed to delete category');
 		} finally {

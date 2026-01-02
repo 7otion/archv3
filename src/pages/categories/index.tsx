@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import { PlusIcon, SearchIcon } from 'lucide-react';
 
 import { Button } from '@/components/button';
@@ -9,8 +8,9 @@ import { Loading } from '@/components/loading';
 
 import { CategoryCard } from '@/pages/categories/card';
 
-import { useCategoriesStore } from '@/lib/store/categories';
-import { useDialogStore } from '@/lib/store/dialog';
+import { useStore, useObservable } from '@/lib/store';
+import { CategoriesStore } from '@/lib/store/categories';
+import { DialogStore } from '@/lib/store/dialog';
 import { useCurrentContentType } from '@/lib/hooks/use-current-content-type';
 
 const CategoriesPage = () => {
@@ -20,11 +20,9 @@ const CategoriesPage = () => {
 
 	const currentContentType = useCurrentContentType();
 
-	const openDialog = useDialogStore(state => state.openDialog);
-	const [categories, setSelectedCategory, fetchCategories] =
-		useCategoriesStore(
-			useShallow(state => [state.items, state.setSelected, state.fetch]),
-		);
+	const categoriesStore = useStore(CategoriesStore);
+	const categories = useObservable(categoriesStore.items);
+	const dialogStore = useStore(DialogStore);
 
 	const filteredCategories = useMemo(() => {
 		if (!filterQuery.trim()) {
@@ -44,13 +42,13 @@ const CategoriesPage = () => {
 		const fetchData = async () => {
 			setIsLoading(true);
 			try {
-				await fetchCategories();
+				await categoriesStore.fetch();
 			} finally {
 				setIsLoading(false);
 			}
 		};
 		fetchData();
-	}, [fetchCategories]);
+	}, []);
 
 	useEffect(() => {
 		if (!filterToggle) {
@@ -59,8 +57,8 @@ const CategoriesPage = () => {
 	}, [filterToggle]);
 
 	const handleCreateCategory = () => {
-		setSelectedCategory(null);
-		openDialog('category-upsert');
+		categoriesStore.setSelected(null);
+		dialogStore.openDialog('category-upsert');
 	};
 
 	return (

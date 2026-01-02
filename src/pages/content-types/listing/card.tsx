@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useShallow } from 'zustand/react/shallow';
 import { useLocation } from 'wouter';
 import {
 	PinIcon,
@@ -22,8 +21,11 @@ import {
 } from '@/components/context-menu';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/tooltip';
 
-import { useDialogStore } from '@/lib/store/dialog';
-import { useContentTypesStore } from '@/lib/store/content-types';
+import { useStore } from '@/lib/store';
+import { DialogStore } from '@/lib/store/dialog';
+import { ContentTypesStore } from '@/lib/store/content-types';
+import { TabsStore } from '@/lib/store/tabs';
+
 import type { ContentType } from '@/lib/models/content-type';
 import { cn } from '@/lib/utils';
 
@@ -36,40 +38,40 @@ const ContentTypeCard = ({ contentType, itemCount }: ContentTypeCardProps) => {
 	const [, navigate] = useLocation();
 	const [isContextMenuOpen, setIsContextMenuOpen] = useState(false);
 
-	const openDialog = useDialogStore(state => state.openDialog);
-	const [updateContentType, setSelectedContentType] = useContentTypesStore(
-		useShallow(state => [state.update, state.setSelected]),
-	);
+	const tabsStore = useStore(TabsStore);
+	const dialogStore = useStore(DialogStore);
+	const contentTypesStore = useStore(ContentTypesStore);
 
 	const handleTogglePin = async () => {
-		updateContentType(contentType.id, {
+		await contentTypesStore.update(contentType.id, {
 			pinned: contentType.pinned ? 0 : 1,
 		});
 	};
 
 	const handleToggleDock = async () => {
-		updateContentType(contentType.id, {
+		await contentTypesStore.update(contentType.id, {
 			docked: contentType.docked ? 0 : 1,
 		});
 	};
 
 	const handleToggleLock = () => {
-		setSelectedContentType(contentType);
-		openDialog('content-type-lock-toggle');
+		contentTypesStore.setSelected(contentType);
+		dialogStore.openDialog('content-type-lock-toggle');
 	};
 
 	const handleEdit = () => {
-		setSelectedContentType(contentType);
-		openDialog('content-type-upsert');
+		contentTypesStore.setSelected(contentType);
+		dialogStore.openDialog('content-type-upsert');
 	};
 
 	const handleDelete = () => {
-		setSelectedContentType(contentType);
-		openDialog('content-type-delete');
+		contentTypesStore.setSelected(contentType);
+		dialogStore.openDialog('content-type-delete');
 	};
 
 	const handleCardClick = (e: React.MouseEvent) => {
 		const target = e.target as HTMLElement;
+
 		if (
 			target.closest('button') ||
 			target.closest('[role="button"]') ||
@@ -77,6 +79,7 @@ const ContentTypeCard = ({ contentType, itemCount }: ContentTypeCardProps) => {
 		) {
 			return;
 		}
+
 		navigate(`/content-types/${contentType.slug}`);
 	};
 
@@ -85,8 +88,19 @@ const ContentTypeCard = ({ contentType, itemCount }: ContentTypeCardProps) => {
 		navigate(`/content-types/${contentType.slug}/manage`);
 	};
 
+	const handleMiddleClick = (e: React.MouseEvent) => {
+		if (e.button === 1) {
+			e.preventDefault();
+			tabsStore.addTab({
+				title: contentType.name,
+				path: `/content-types/${contentType.slug}`,
+			});
+		}
+	};
+
 	const cardStyle: React.CSSProperties = {
-		backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)`,
+		backgroundImage:
+			'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)',
 		backgroundSize: contentType.coverSrc ? 'cover' : '40px 40px',
 	};
 
@@ -99,6 +113,7 @@ const ContentTypeCard = ({ contentType, itemCount }: ContentTypeCardProps) => {
 			<ContextMenuTrigger asChild>
 				<div
 					onClick={handleCardClick}
+					onMouseDown={e => handleMiddleClick(e)}
 					className={cn(
 						'overflow-hidden relative card hover:shadow-lg dark:hover:shadow-blue-800/10 dark:hover:border-blue-700/20 hover:cursor-pointer rounded-md w-full h-full flex flex-col justify-between p-4 bg-cover z-2 bg-center group hover:-translate-y-0.5 ransition-all duration-200 ease-out',
 						contentType.coverSrc

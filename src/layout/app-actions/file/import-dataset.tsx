@@ -9,13 +9,14 @@ import {
 	DialogTitle,
 	DialogDescription,
 } from '@/components/dialog';
+import { Spinner } from '@/components/spinner';
 
-import { toastError } from '@/lib/utils';
-import { useDialogStore } from '@/lib/store/dialog';
+import { useStore } from '@/lib/store';
+import { DialogStore } from '@/lib/store/dialog';
 import { DatasetImporter, type Dataset } from '@/lib/services/dataset';
+import { toastError } from '@/lib/utils';
 
 import DatasetCard from './dataset-card';
-import { Spinner } from '@/components/spinner';
 
 const ImportDataset = () => {
 	const [datasets, setDatasets] = useState<Dataset[]>([]);
@@ -27,7 +28,7 @@ const ImportDataset = () => {
 	);
 	const [multiImportDemoData, setMultiImportDemoData] = useState(true);
 
-	const closeDialog = useDialogStore(state => state.closeDialog);
+	const dialogStore = useStore(DialogStore);
 
 	useEffect(() => {
 		loadDatasets();
@@ -84,7 +85,7 @@ const ImportDataset = () => {
 			}
 
 			setSelectedDatasets(new Set());
-			closeDialog();
+			dialogStore.closeDialog();
 			setTimeout(() => {
 				window.location.reload();
 			}, 500);

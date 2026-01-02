@@ -5,9 +5,10 @@ import { Button } from '@/components/button';
 import { Input } from '@/components/input';
 import { TableCell, TableRow } from '@/components/table';
 
-import { Tag } from '@/lib/models/tag';
-import { useDialogStore } from '@/lib/store/dialog';
-import { useTagsStore } from '@/lib/store/tags';
+import { useStore } from '@/lib/store';
+import { DialogStore } from '@/lib/store/dialog';
+import { TagsStore } from '@/lib/store/tags';
+import type { Tag } from '@/lib/models/tag';
 
 interface EditableTag {
 	id?: number;
@@ -42,15 +43,15 @@ export const TagRow = memo<TagRowProps>(
 		onCancel,
 		onUpdateField,
 	}) => {
-		const setSelectedTag = useTagsStore(state => state.setSelected);
-		const openDialog = useDialogStore(state => state.openDialog);
+		const tagsStore = useStore(TagsStore);
+		const dialogStore = useStore(DialogStore);
 
 		const id = isNew ? 'new' : tag?.id;
 
 		const handleDelete = () => {
 			if (tag) {
-				setSelectedTag(tag);
-				openDialog('tag-delete');
+				tagsStore.setSelected(tag);
+				dialogStore.openDialog('tag-delete');
 			}
 		};
 

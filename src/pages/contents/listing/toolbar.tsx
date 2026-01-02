@@ -4,15 +4,16 @@ import { Button } from '@/components/button';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/tooltip';
 import { LayoutBreadcrumb } from '@/layout/breadcrumb';
 
-import { useDialogStore } from '@/lib/store/dialog';
-import { useContentsStore } from '@/lib/store/contents';
+import { useStore, useObservable } from '@/lib/store';
+import { DialogStore } from '@/lib/store/dialog';
+import { ContentsStore } from '@/lib/store/contents';
 
 import { ColumnManager } from './column-manager';
 
 export const ContentListToolbar = () => {
-	const toggleViewType = useContentsStore(state => state.toggleViewType);
-	const viewType = useContentsStore(state => state.viewType);
-	const openDialog = useDialogStore(state => state.openDialog);
+	const contentsStore = useStore(ContentsStore);
+	const viewType = useObservable(contentsStore.viewType);
+	const dialogStore = useStore(DialogStore);
 
 	return (
 		<>
@@ -28,7 +29,7 @@ export const ContentListToolbar = () => {
 								className="sm:size-7 md:size-9"
 								variant="secondary"
 								size="icon"
-								onClick={() => toggleViewType()}
+								onClick={() => contentsStore.toggleViewType()}
 							>
 								<Grid2X2Icon />
 							</Button>
@@ -44,7 +45,9 @@ export const ContentListToolbar = () => {
 								className="sm:size-7 md:size-9"
 								variant="secondary"
 								size="icon"
-								onClick={() => openDialog('content-upsert')}
+								onClick={() =>
+									dialogStore.openDialog('content-upsert')
+								}
 							>
 								<PlusIcon />
 							</Button>

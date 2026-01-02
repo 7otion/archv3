@@ -1,26 +1,16 @@
 import { Category } from '@/lib/models/category';
 
-import { createResourceStore, type ResourceState } from './resource';
-import { extractContentTypeFromPath } from './content-types';
+import { ResourceStore } from '@/lib/store/resource';
+import { extractContentTypeFromPath } from '@/lib/store/content-types';
 
-type CategoriesState = ResourceState<Category>;
-
-export const useCategoriesStore = createResourceStore<
-	Category,
-	CategoriesState
->(
-	{
-		model: Category,
-		baseFilter: () => {
-			const currentContentType = extractContentTypeFromPath();
-			if (currentContentType) {
-				return {
-					content_type_id: currentContentType.id,
-				};
-			}
-		},
-	},
-	(_set, _get) => ({
-		// custom methods can be added here if needed
-	}),
-);
+export class CategoriesStore extends ResourceStore<Category> {
+	constructor() {
+		super({
+			model: Category,
+			baseFilter: async () => {
+				const ct = await extractContentTypeFromPath();
+				if (ct) return { content_type_id: ct.id };
+			},
+		});
+	}
+}
