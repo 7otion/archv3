@@ -6,7 +6,7 @@ import { Loading } from '@/components/loading';
 import { useStore, useObservable } from '@/lib/store';
 import { DialogStore } from '@/lib/store/dialog';
 
-const UpsertContentType = lazy(() => import('./dialogs/upsert-content-type'));
+const UpsertContentType = lazy(() => import('./dialogs/upsert'));
 const LockToggleContentType = lazy(() => import('./dialogs/lock-toggle'));
 const DeleteContentType = lazy(() => import('./dialogs/delete'));
 
