@@ -56,9 +56,9 @@ function App() {
 					},
 				}}
 			/>
-			<DialogCoordinator />
 			{activeTab && (
 				<StoreProvider stores={activeTab.stores}>
+					<DialogCoordinator />
 					<Layout>
 						<Suspense fallback={<Loading />}>
 							<Router>
